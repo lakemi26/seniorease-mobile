@@ -41,7 +41,7 @@ export function SelectionCard({ label, description, selected, onPress, accessibi
         </ThemeText>
         {selected ? (
           <View style={[styles.check, { backgroundColor: colors.primary, borderRadius: 12 }]} accessibilityElementsHidden>
-            <ThemeText variant="caption" style={{ color: '#FFFFFF', fontSize: 12, lineHeight: 16 }}>✓</ThemeText>
+            <ThemeText variant="caption" style={{ color: colors.surface, fontSize: 12, lineHeight: 16 }}>✓</ThemeText>
           </View>
         ) : null}
       </View>

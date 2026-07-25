@@ -68,15 +68,17 @@ beforeEach(() => {
 })
 
 describe('LoginScreen navigation', () => {
-  it('navigates to forgot password, sign up, and back', async () => {
+  it('navigates to forgot password and sign up', async () => {
     const { getByText } = await render(<LoginScreen />)
     fireEvent.press(getByText('Esqueci minha senha'))
     expect(mockPush).toHaveBeenCalledWith('/(public)/recuperar-senha')
 
     fireEvent.press(getByText('Criar conta'))
     expect(mockPush).toHaveBeenCalledWith('/(public)/cadastro')
+  })
 
-    fireEvent.press(getByText('Voltar para a página inicial'))
-    expect(mockBack).toHaveBeenCalled()
+  it('does not render back to home link', async () => {
+    const { queryByText } = await render(<LoginScreen />)
+    expect(queryByText('Voltar para a página inicial')).toBeNull()
   })
 })

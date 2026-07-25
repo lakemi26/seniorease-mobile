@@ -39,23 +39,19 @@ export function PreferencesProvider({ children }: PropsWithChildren) {
 
     setIsLoading(true)
 
-    authUseCases.getUserPreferences(user.uid).then((data) => {
-      if (data) {
-        setPreferences(data)
-      }
-      setIsLoading(false)
-    }).catch(() => {
-      setIsLoading(false)
-    })
-
     const unsub = authUseCases.subscribeToUserPreferences(
       user.uid,
       (data) => {
         if (data) {
-          setPreferences(data)
+          setPreferences({ ...DEFAULT_USER_PREFERENCES, ...data })
+        } else {
+          setPreferences(DEFAULT_USER_PREFERENCES)
         }
+        setIsLoading(false)
       },
-      () => {},
+      () => {
+        setIsLoading(false)
+      },
     )
 
     return () => {

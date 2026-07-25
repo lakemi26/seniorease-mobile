@@ -32,7 +32,7 @@ export function DynamicPreviewCard() {
         configurações que você está escolhendo agora.
       </ThemeText>
       <View style={[styles.buttonMock, { backgroundColor: colors.primary, borderRadius: radius.sm, paddingVertical: spacing.sm, paddingHorizontal: spacing.lg }]}>
-        <ThemeText variant="body" style={{ color: '#FFFFFF' }}>
+        <ThemeText variant="body" style={{ color: colors.surface }}>
           Botão de exemplo
         </ThemeText>
       </View>

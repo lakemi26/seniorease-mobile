@@ -80,9 +80,8 @@ describe('CadastroScreen error and navigation', () => {
     expect(mockPush).toHaveBeenCalledWith('/(public)/login')
   })
 
-  it('navigates back', async () => {
-    const { getByText } = await render(<CadastroScreen />)
-    fireEvent.press(getByText('Voltar para a página inicial'))
-    expect(mockBack).toHaveBeenCalled()
+  it('does not render back to home link', async () => {
+    const { queryByText } = await render(<CadastroScreen />)
+    expect(queryByText('Voltar para a página inicial')).toBeNull()
   })
 })

@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Pressable, ActivityIndicator, StyleSheet, type ViewStyle, type TextStyle } from 'react-native'
-import { colors } from '@/shared/theme/colors'
+import { useTheme } from '@/contexts/theme-context'
 import { spacing, touchSize } from '@/shared/theme/spacing'
 import { radius } from '@/shared/theme/radius'
 import { fontSizeBase as fontSize, fontWeight } from '@/shared/theme/typography'
@@ -29,6 +29,7 @@ export function AppButton({
   accessibilityLabel,
   accessibilityHint,
 }: AppButtonProps) {
+  const { colors } = useTheme()
   const isDisabled = disabled || loading
 
   const styles = useMemo(() => StyleSheet.create({
@@ -57,12 +58,12 @@ export function AppButton({
     disabledText: {
       color: colors.disabled,
     },
-  }), [])
+  }), [colors.disabled])
 
   const btnVariants: Record<ButtonVariant, { container: ViewStyle; text: TextStyle }> = useMemo(() => ({
     primary: {
       container: { backgroundColor: colors.primary },
-      text: { color: '#FFFFFF' } as TextStyle,
+      text: { color: colors.surface } as TextStyle,
     },
     secondary: {
       container: { backgroundColor: colors.surface },
@@ -82,9 +83,9 @@ export function AppButton({
     },
     danger: {
       container: { backgroundColor: colors.danger },
-      text: { color: '#FFFFFF' } as TextStyle,
+      text: { color: colors.surface } as TextStyle,
     },
-  }), [])
+  }), [colors.primary, colors.surface, colors.text, colors.danger])
 
   return (
     <Pressable
@@ -104,7 +105,7 @@ export function AppButton({
     >
       {loading ? (
         <ActivityIndicator
-          color={variant === 'outline' || variant === 'ghost' ? colors.primary : '#FFFFFF'}
+          color={variant === 'outline' || variant === 'ghost' ? colors.primary : colors.surface}
           size="small"
         />
       ) : (

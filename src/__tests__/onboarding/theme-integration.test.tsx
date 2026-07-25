@@ -82,19 +82,21 @@ describe('buildTheme', () => {
     expect(theme.fontSize.body).toBe(Math.round(17 * 1.15))
   })
 
-  it('contrast dark returns dark colors', () => {
+  it('contrast high returns high contrast colors with light background', () => {
+    const theme = buildTheme({ ...defaultPrefs, contrast: 'high' })
+    expect(theme.contrast).toBe('high')
+    expect(theme.colors.background).toBe('#FFFFFF')
+    expect(theme.colors.text).toBe('#000000')
+    expect(theme.colors.border).toBe('#000000')
+    expect(theme.colors.primary).toBe('#006B68')
+  })
+
+  it('contrast dark returns dark background', () => {
     const theme = buildTheme({ ...defaultPrefs, contrast: 'dark' })
     expect(theme.contrast).toBe('dark')
     expect(theme.colors.background).toBe('#101817')
     expect(theme.colors.text).toBe('#F4F7F6')
-  })
-
-  it('contrast high returns high contrast colors', () => {
-    const theme = buildTheme({ ...defaultPrefs, contrast: 'high' })
-    expect(theme.contrast).toBe('high')
-    expect(theme.colors.background).toBe('#000000')
-    expect(theme.colors.text).toBe('#FFFFFF')
-    expect(theme.colors.border).toBe('#FFFFFF')
+    expect(theme.colors.border).toBe('#40514D')
   })
 
   it('spacing expanded increases spacing values', () => {

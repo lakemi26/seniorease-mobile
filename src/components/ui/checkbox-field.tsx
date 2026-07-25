@@ -33,7 +33,7 @@ export function CheckboxField({ checked, onValueChange, label, error }: Checkbox
           ]}
         >
           {checked ? (
-            <ThemeText variant="caption" style={styles.check}>✓</ThemeText>
+            <ThemeText variant="caption" style={[styles.check, { color: colors.surface }]}>✓</ThemeText>
           ) : null}
         </View>
         <ThemeText variant="body" style={styles.label}>
@@ -63,7 +63,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   check: {
-    color: '#FFFFFF',
     fontSize: 14,
     lineHeight: 16,
   },

@@ -2,21 +2,22 @@ import { Stack } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { AuthProvider, useAuth } from '@/contexts/auth-context'
-import { PreferencesProvider } from '@/contexts/preferences-context'
+import { PreferencesProvider, usePreferences } from '@/contexts/preferences-context'
 import { ThemeProvider } from '@/contexts/theme-context'
 import { LoadingScreen } from '@/components/ui/loading-screen'
 
 SplashScreen.preventAutoHideAsync()
 
 function RootNavigator() {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading: authLoading } = useAuth()
+  const { isLoading: prefsLoading } = usePreferences()
 
-  if (isLoading) {
+  if (authLoading || prefsLoading) {
     return <LoadingScreen message="Carregando..." />
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
       <Stack.Protected guard={!user}>
         <Stack.Screen name="(public)" />
       </Stack.Protected>

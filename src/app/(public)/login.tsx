@@ -103,10 +103,6 @@ export default function LoginScreen() {
             <ThemeText variant="link">Criar conta</ThemeText>
           </Pressable>
         </View>
-
-        <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backRow}>
-          <ThemeText variant="link">Voltar para a página inicial</ThemeText>
-        </Pressable>
       </View>
     </AuthScreenLayout>
   )
@@ -121,9 +117,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  backRow: {
-    alignItems: 'center',
-    paddingBottom: 16,
   },
 })
