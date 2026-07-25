@@ -1,18 +1,42 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import { Stack } from 'expo-router'
+import * as SplashScreen from 'expo-splash-screen'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { AuthProvider, useAuth } from '@/contexts/auth-context'
+import { PreferencesProvider } from '@/contexts/preferences-context'
+import { ThemeProvider } from '@/contexts/theme-context'
+import { LoadingScreen } from '@/components/ui/loading-screen'
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+SplashScreen.preventAutoHideAsync()
 
-SplashScreen.preventAutoHideAsync();
+function RootNavigator() {
+  const { user, isLoading } = useAuth()
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  if (isLoading) {
+    return <LoadingScreen message="Carregando..." />
+  }
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
-  );
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Protected guard={!user}>
+        <Stack.Screen name="(public)" />
+      </Stack.Protected>
+      <Stack.Protected guard={!!user}>
+        <Stack.Screen name="(private)" />
+      </Stack.Protected>
+    </Stack>
+  )
+}
+
+export default function RootLayout() {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <PreferencesProvider>
+          <ThemeProvider>
+            <RootNavigator />
+          </ThemeProvider>
+        </PreferencesProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
+  )
 }
