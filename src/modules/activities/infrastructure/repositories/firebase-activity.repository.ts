@@ -248,6 +248,9 @@ export function createFirebaseActivityRepository(): IActivityRepository {
   async function getWeeklySummary(uid: string): Promise<WeeklySummary> {
     const db = getDb()
     const ref = collection(db, 'activities')
+    const q = query(ref, where('userId', '==', uid))
+
+    const snap = await getDocs(q)
 
     const now = new Date()
     const startOfWeek = new Date(now)
@@ -257,21 +260,18 @@ export function createFirebaseActivityRepository(): IActivityRepository {
     const endOfWeek = new Date(startOfWeek)
     endOfWeek.setDate(startOfWeek.getDate() + 7)
 
-    const q = query(
-      ref,
-      where('userId', '==', uid),
-      where('updatedAt', '>=', Timestamp.fromDate(startOfWeek)),
-      where('updatedAt', '<=', Timestamp.fromDate(endOfWeek))
-    )
-
-    const snapshot = await getDocs(q)
-    const total = snapshot.size
+    let total = 0
     let completed = 0
     let pending = 0
     let inProgress = 0
 
-    snapshot.forEach((d) => {
+    snap.forEach((d) => {
       const data = d.data() as ActivityDocument
+      const scheduledAt = data.scheduledAt.toDate()
+
+      if (scheduledAt < startOfWeek || scheduledAt >= endOfWeek) return
+
+      total++
       if (data.status === 'completed') completed++
       else if (data.status === 'pending') pending++
       else if (data.status === 'inProgress') inProgress++

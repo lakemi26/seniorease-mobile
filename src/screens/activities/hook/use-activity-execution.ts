@@ -32,21 +32,33 @@ export function useActivityExecution(id: string | undefined) {
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
   const prevIdRef = useRef<string | undefined>(undefined)
   const isMountedRef = useRef(true)
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearFeedbackTimer = useCallback(() => {
+    if (feedbackTimerRef.current) {
+      clearTimeout(feedbackTimerRef.current)
+      feedbackTimerRef.current = null
+    }
+  }, [])
 
   useEffect(() => {
     isMountedRef.current = true
-    return () => { isMountedRef.current = false }
-  }, [])
+    return () => {
+      isMountedRef.current = false
+      clearFeedbackTimer()
+    }
+  }, [clearFeedbackTimer])
 
   useEffect(() => {
     if (id !== prevIdRef.current) {
       prevIdRef.current = id
+      clearFeedbackTimer()
       setFeedbackMessage(null)
       setError(null)
       setIsProcessing(false)
       loadActivity()
     }
-  }, [id])
+  }, [clearFeedbackTimer, id])
 
   async function loadActivity() {
     if (!id) {
@@ -108,8 +120,9 @@ export function useActivityExecution(id: string | undefined) {
   })()
 
   const clearFeedback = useCallback(() => {
+    clearFeedbackTimer()
     setFeedbackMessage(null)
-  }, [])
+  }, [clearFeedbackTimer])
 
   const startActivity = useCallback(async (): Promise<boolean> => {
     if (!id || !userId || isProcessing) return false
@@ -144,9 +157,11 @@ export function useActivityExecution(id: string | undefined) {
         const msg = Platform.OS === 'web'
           ? 'Etapa concluída.'
           : 'Etapa concluída.'
+        clearFeedbackTimer()
         setFeedbackMessage(msg)
-        setTimeout(() => {
+        feedbackTimerRef.current = setTimeout(() => {
           if (isMountedRef.current) setFeedbackMessage(null)
+          feedbackTimerRef.current = null
         }, 2000)
       }
       return true
@@ -160,7 +175,7 @@ export function useActivityExecution(id: string | undefined) {
         setIsProcessing(false)
       }
     }
-  }, [id, userId, currentStep, isProcessing])
+  }, [clearFeedbackTimer, id, userId, currentStep, isProcessing])
 
   const reopenStep = useCallback(async (stepId: string): Promise<boolean> => {
     if (!id || !userId || isProcessing) return false

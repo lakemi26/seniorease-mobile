@@ -10,11 +10,11 @@ interface ActivityExecutionErrorStateProps {
 }
 
 export function ActivityExecutionErrorState({ message, onRetry }: ActivityExecutionErrorStateProps) {
-  const { spacing } = useTheme()
+  const { colors, spacing } = useTheme()
   return (
     <ThemeView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl, gap: spacing.lg }}>
       <ThemeText variant="title">Não foi possível carregar a atividade.</ThemeText>
-      <ThemeText variant="body" color="muted" style={{ textAlign: 'center' }}>
+      <ThemeText variant="body" style={[{ textAlign: 'center' }, { color: colors.textMuted }]}>
         {message}
       </ThemeText>
       <AppButton title="Tentar novamente" onPress={onRetry} variant="primary" />

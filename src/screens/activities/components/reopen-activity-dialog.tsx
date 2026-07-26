@@ -29,7 +29,7 @@ export function ReopenActivityDialog({ visible, onConfirm, onCancel, isLoading =
           ]}
         >
           <ThemeText variant="subtitle">Reabrir atividade?</ThemeText>
-          <ThemeText variant="body" color="muted">
+          <ThemeText variant="body" style={{ color: colors.textMuted }}>
             Ela voltará para as atividades em andamento.
           </ThemeText>
           <View style={[styles.actions, { gap: spacing.md }]}>

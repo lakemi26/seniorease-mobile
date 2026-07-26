@@ -12,7 +12,7 @@ interface ActivityExecutionIntroductionProps {
 }
 
 export function ActivityExecutionIntroduction({ activity, onStart, isProcessing }: ActivityExecutionIntroductionProps) {
-  const { spacing } = useTheme()
+  const { colors, spacing } = useTheme()
   const stepsCount = activity.steps.length
 
   return (
@@ -20,7 +20,7 @@ export function ActivityExecutionIntroduction({ activity, onStart, isProcessing 
       <View style={{ gap: spacing.md }}>
         <ThemeText variant="display">{activity.title}</ThemeText>
         {activity.description && (
-          <ThemeText variant="body" color="muted">{activity.description}</ThemeText>
+          <ThemeText variant="body" style={{ color: colors.textMuted }}>{activity.description}</ThemeText>
         )}
       </View>
 
@@ -31,19 +31,19 @@ export function ActivityExecutionIntroduction({ activity, onStart, isProcessing 
             {stepsCount === 1 ? '1 etapa' : `${stepsCount} etapas`}
           </ThemeText>
           {activity.hasTime && (
-            <ThemeText variant="body" color="muted">
+            <ThemeText variant="body" style={{ color: colors.textMuted }}>
               {formatDate(activity.scheduledAt)} às {formatTime(activity.scheduledAt)}
             </ThemeText>
           )}
           {!activity.hasTime && (
-            <ThemeText variant="body" color="muted">
+            <ThemeText variant="body" style={{ color: colors.textMuted }}>
               {formatDate(activity.scheduledAt)} (sem horário)
             </ThemeText>
           )}
         </View>
       </View>
 
-      <ThemeText variant="body" color="muted">
+      <ThemeText variant="body" style={{ color: colors.textMuted }}>
         Vamos realizar esta atividade uma etapa de cada vez.
       </ThemeText>
 

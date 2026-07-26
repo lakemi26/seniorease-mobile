@@ -27,7 +27,7 @@ export function GuidedActivityStep({
   onCompleteStep,
   isProcessing,
 }: GuidedActivityStepProps) {
-  const { spacing } = useTheme()
+  const { colors, spacing } = useTheme()
   const stepIndex = sortedSteps.findIndex(s => s.id === currentStep.id)
   const stepNumber = stepIndex + 1
 
@@ -36,7 +36,7 @@ export function GuidedActivityStep({
       <View style={{ gap: spacing.md }}>
         <ThemeText
           variant="body"
-          color="muted"
+          style={{ color: colors.textMuted }}
           accessibilityLabel={`Etapa ${stepNumber} de ${totalSteps}`}
         >
           Etapa {stepNumber} de {totalSteps}

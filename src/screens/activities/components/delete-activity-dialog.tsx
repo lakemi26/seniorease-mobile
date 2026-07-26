@@ -34,7 +34,7 @@ export function DeleteActivityDialog({ visible, onConfirm, onCancel, isDeleting 
           ]}
         >
           <ThemeText variant="subtitle">Excluir atividade?</ThemeText>
-          <ThemeText variant="body" color="muted">
+          <ThemeText variant="body" style={{ color: colors.textMuted }}>
             Esta ação não poderá ser desfeita.
           </ThemeText>
 

@@ -32,7 +32,7 @@ export function ActivityCompletionDialog({ visible, onReviewSteps, onComplete, i
           ]}
         >
           <ThemeText variant="subtitle">Todas as etapas foram concluídas.</ThemeText>
-          <ThemeText variant="body" color="muted">
+          <ThemeText variant="body" style={{ color: colors.textMuted }}>
             Deseja concluir esta atividade?
           </ThemeText>
           <View style={[styles.actions, { gap: spacing.md }]}>

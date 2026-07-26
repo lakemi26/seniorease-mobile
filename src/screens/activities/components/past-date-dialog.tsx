@@ -33,7 +33,7 @@ export function PastDateDialog({ visible, onConfirm, onCancel }: PastDateDialogP
           ]}
         >
           <ThemeText variant="subtitle">A data escolhida já passou.</ThemeText>
-          <ThemeText variant="body" color="muted">
+          <ThemeText variant="body" style={{ color: colors.textMuted }}>
             Deseja salvar esta atividade mesmo assim?
           </ThemeText>
 

@@ -19,7 +19,7 @@ import { ReopenActivityDialog } from '@/screens/activities/components/reopen-act
 export default function ActivityExecutionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
-  const { spacing, interfaceMode, reduceMotion } = useTheme()
+  const { colors, spacing, interfaceMode, reduceMotion } = useTheme()
   const { preferences } = usePreferences()
   const isComplete = interfaceMode === 'complete'
   const confirmCritical = preferences.confirmCriticalActions
@@ -118,10 +118,10 @@ export default function ActivityExecutionScreen() {
           <View style={{ gap: spacing.md }}>
             <ThemeText variant="display">{activity.title}</ThemeText>
             {activity.description && (
-              <ThemeText variant="body" color="muted">{activity.description}</ThemeText>
+              <ThemeText variant="body" style={{ color: colors.textMuted }}>{activity.description}</ThemeText>
             )}
           </View>
-          <ThemeText variant="body" color="muted">
+          <ThemeText variant="body" style={{ color: colors.textMuted }}>
             Esta atividade não possui etapas cadastradas.
           </ThemeText>
           <View style={{ flex: 1 }} />
@@ -143,7 +143,7 @@ export default function ActivityExecutionScreen() {
         <ScrollView contentContainerStyle={{ padding: spacing.xl, gap: spacing.xl }}>
           <View style={{ gap: spacing.md }}>
             <ThemeText variant="display">{activity.title}</ThemeText>
-            <ThemeText variant="title" color="success">
+            <ThemeText variant="title" style={{ color: colors.success }}>
               Atividade concluída com sucesso.
             </ThemeText>
           </View>

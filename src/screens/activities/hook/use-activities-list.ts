@@ -10,7 +10,7 @@ const PAGE_SIZE = 10
 const repo = createFirebaseActivityRepository()
 const useCases = createActivityUseCases(repo)
 
-export type PeriodFilter = 'all' | 'today' | 'upcoming' | 'inProgress' | 'completed'
+export type PeriodFilter = 'all' | 'today' | 'upcoming' | 'inProgress' | 'completed' | 'overdue'
 
 export interface ActivitiesListState {
   activities: Activity[]
@@ -91,19 +91,23 @@ export function useActivitiesList() {
       )
     }
 
+    const now = new Date()
+
     if (period === 'inProgress') {
       filtered = filtered.filter((a) => a.status === 'inProgress')
     } else if (period === 'completed') {
       filtered = filtered.filter((a) => a.status === 'completed')
+    } else if (period === 'overdue') {
+      filtered = filtered.filter(
+        (a) => a.scheduledAt < now && a.status !== 'completed' && a.status !== 'cancelled',
+      )
     } else if (period === 'today') {
-      const now = new Date()
       const start = new Date(now)
       start.setHours(0, 0, 0, 0)
       const end = new Date(now)
       end.setHours(23, 59, 59, 999)
       filtered = filtered.filter((a) => a.scheduledAt >= start && a.scheduledAt <= end)
     } else if (period === 'upcoming') {
-      const now = new Date()
       filtered = filtered.filter((a) => a.scheduledAt > now && a.status !== 'completed' && a.status !== 'cancelled')
     }
 

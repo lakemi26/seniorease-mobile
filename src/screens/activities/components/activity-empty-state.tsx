@@ -10,7 +10,7 @@ interface ActivityEmptyStateProps {
 }
 
 export function ActivityEmptyState({ hasFilters, onCreatePress, onClearFilters }: ActivityEmptyStateProps) {
-  const { spacing } = useTheme()
+  const { colors, spacing } = useTheme()
 
   if (hasFilters) {
     return (
@@ -18,7 +18,7 @@ export function ActivityEmptyState({ hasFilters, onCreatePress, onClearFilters }
         <ThemeText variant="title" style={styles.center}>
           Nenhuma atividade encontrada.
         </ThemeText>
-        <ThemeText variant="body" color="muted" style={styles.center}>
+        <ThemeText variant="body" style={[styles.center, { color: colors.textMuted }]}>
           Tente alterar os filtros ou a busca.
         </ThemeText>
         {onClearFilters && (
@@ -44,7 +44,7 @@ export function ActivityEmptyState({ hasFilters, onCreatePress, onClearFilters }
       <ThemeText variant="title" style={styles.center}>
         Você ainda não possui atividades.
       </ThemeText>
-      <ThemeText variant="body" color="muted" style={styles.center}>
+      <ThemeText variant="body" style={[styles.center, { color: colors.textMuted }]}>
         Crie sua primeira atividade para começar a organizar sua rotina.
       </ThemeText>
       {onCreatePress && (

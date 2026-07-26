@@ -15,7 +15,7 @@ import { ActivityListSkeleton } from '@/screens/activities/components/activity-l
 
 export default function ActivitiesListScreen() {
   const router = useRouter()
-  const { spacing, interfaceMode } = useTheme()
+  const { colors, spacing, interfaceMode } = useTheme()
   const isComplete = interfaceMode === 'complete'
 
   const {
@@ -53,7 +53,7 @@ export default function ActivitiesListScreen() {
       <Screen padded={false}>
         <ThemeView style={[styles.centered, { padding: spacing.xl, gap: spacing.lg }]}>
           <ThemeText variant="title">Erro ao carregar atividades</ThemeText>
-          <ThemeText variant="body" color="muted">{error}</ThemeText>
+          <ThemeText variant="body" style={{ color: colors.textMuted }}>{error}</ThemeText>
           <AppButton title="Tentar novamente" onPress={() => {}} variant="primary" />
         </ThemeView>
       </Screen>

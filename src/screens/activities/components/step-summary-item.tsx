@@ -41,7 +41,7 @@ export function StepSummaryItem({ step, index, onReopen, canReopen }: StepSummar
         >
           {step.title}
         </ThemeText>
-        <ThemeText variant="caption" color="muted">
+        <ThemeText variant="caption" style={{ color: colors.textMuted }}>
           {statusLabel}
         </ThemeText>
       </View>

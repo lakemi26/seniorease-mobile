@@ -163,6 +163,7 @@ export default function EditarAtividadeModal() {
                 onHasTimeChange={(v) => setValue('hasTime', v)}
                 onTimeChange={(v) => setValue('time', v)}
                 dateError={error?.message}
+                timeError={errors.time?.message}
               />
             )}
           />

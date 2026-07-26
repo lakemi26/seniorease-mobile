@@ -29,7 +29,7 @@ export function ReopenStepDialog({ visible, onConfirm, onCancel, isLoading = fal
           ]}
         >
           <ThemeText variant="subtitle">Reabrir esta etapa?</ThemeText>
-          <ThemeText variant="body" color="muted">
+          <ThemeText variant="body" style={{ color: colors.textMuted }}>
             O progresso da atividade será atualizado.
           </ThemeText>
           <View style={[styles.actions, { gap: spacing.md }]}>

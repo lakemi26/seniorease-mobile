@@ -55,7 +55,7 @@ function DetailsContent({ activity }: { activity: Activity }) {
       <View>
         <ThemeText variant="title">{activity.title}</ThemeText>
         {activity.description && (
-          <ThemeText variant="body" color="muted" style={{ marginTop: spacing.sm }}>
+          <ThemeText variant="body" style={{ marginTop: spacing.sm, color: colors.textMuted }}>
             {activity.description}
           </ThemeText>
         )}
@@ -120,7 +120,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 export default function ActivityDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
-  const { spacing, confirmCriticalActions } = useTheme()
+  const { colors, spacing, confirmCriticalActions } = useTheme()
   const { user } = useAuth()
   const { activity, isLoading, error, remove } = useActivityDetails(id)
   const [showDelete, setShowDelete] = useState(false)
@@ -179,7 +179,7 @@ export default function ActivityDetailsScreen() {
     return (
       <ThemeView style={[styles.centered, { padding: spacing.xl, gap: spacing.lg }]}>
         <ThemeText variant="title">Atividade não encontrada.</ThemeText>
-        <ThemeText variant="body" color="muted">
+        <ThemeText variant="body" style={{ color: colors.textMuted }}>
           Ela pode ter sido removida ou não estar mais disponível.
         </ThemeText>
         <AppButton

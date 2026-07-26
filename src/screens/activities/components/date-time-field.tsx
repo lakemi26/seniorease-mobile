@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { View, TextInput, Pressable, Platform, Modal, StyleSheet } from 'react-native'
-import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker'
-import { Ionicons } from '@expo/vector-icons'
+import { View, TextInput, Pressable, StyleSheet } from 'react-native'
 import { useTheme } from '@/contexts/theme-context'
 import { ThemeText } from '@/components/theme/theme-text'
 import { radius } from '@/shared/theme/radius'
@@ -30,9 +28,10 @@ function toStorageDate(displayStr: string): string {
   return `${cleaned.slice(4, 8)}-${cleaned.slice(2, 4)}-${cleaned.slice(0, 2)}`
 }
 
-function toDisplayTime(timeStr: string): string {
-  if (!timeStr) return 'Selecionar horário'
-  return timeStr
+function formatTimeInput(text: string): string {
+  const digits = text.replace(/\D/g, '').slice(0, 4)
+  if (digits.length <= 2) return digits
+  return `${digits.slice(0, 2)}:${digits.slice(2)}`
 }
 
 export function DateTimeField({
@@ -46,8 +45,6 @@ export function DateTimeField({
   timeError,
 }: DateTimeFieldProps) {
   const { colors, spacing } = useTheme()
-  const [showDatePicker, setShowDatePicker] = useState(false)
-  const [showTimePicker, setShowTimePicker] = useState(false)
   const [inputValue, setInputValue] = useState(dateValue ? toDisplayDate(dateValue) : '')
 
   useEffect(() => {
@@ -75,62 +72,9 @@ export function DateTimeField({
     }
   }, [onDateChange])
 
-  const openDatePicker = useCallback(() => {
-    const initialDate = dateValue ? new Date(dateValue + 'T12:00:00') : new Date()
-
-    if (Platform.OS === 'web') {
-      const input = document.createElement('input')
-      input.type = 'date'
-      input.value = dateValue || ''
-      input.addEventListener('input', () => {
-        if (input.value) {
-          onDateChange(input.value)
-        }
-      })
-      input.showPicker()
-      return
-    }
-
-    if (Platform.OS === 'android') {
-      DateTimePickerAndroid.open({
-        value: initialDate,
-        mode: 'date',
-        display: 'default',
-        onChange: (_event, selectedDate) => {
-          if (selectedDate) {
-            const y = selectedDate.getFullYear()
-            const m = String(selectedDate.getMonth() + 1).padStart(2, '0')
-            const d = String(selectedDate.getDate()).padStart(2, '0')
-            onDateChange(`${y}-${m}-${d}`)
-          }
-        },
-      })
-    } else {
-      setShowDatePicker(true)
-    }
-  }, [dateValue, onDateChange])
-
-  const handleDatePickerChange = useCallback((_event: any, selectedDate?: Date) => {
-    if (Platform.OS === 'ios') {
-      setShowDatePicker(false)
-    }
-    if (selectedDate) {
-      const y = selectedDate.getFullYear()
-      const m = String(selectedDate.getMonth() + 1).padStart(2, '0')
-      const d = String(selectedDate.getDate()).padStart(2, '0')
-      onDateChange(`${y}-${m}-${d}`)
-    }
-  }, [onDateChange])
-
-  const handleTimeSelected = useCallback(() => {
-    const now = new Date()
-    const h = String(now.getHours()).padStart(2, '0')
-    const m = String(now.getMinutes()).padStart(2, '0')
-    if (!timeValue) {
-      onTimeChange(`${h}:${m}`)
-    }
-    setShowTimePicker(false)
-  }, [timeValue, onTimeChange])
+  const handleTimeChange = useCallback((text: string) => {
+    onTimeChange(formatTimeInput(text))
+  }, [onTimeChange])
 
   return (
     <View style={{ gap: spacing.md }}>
@@ -138,77 +82,34 @@ export function DateTimeField({
         <ThemeText variant="label">
           Data <ThemeText variant="caption" color={colors.danger}>*</ThemeText>
         </ThemeText>
-        <View style={[styles.dateRow, { gap: spacing.sm }]}>
-          <TextInput
-            value={inputValue}
-            onChangeText={handleTextChange}
-            placeholder="DD/MM/AAAA"
-            placeholderTextColor={colors.textMuted}
-            keyboardType="number-pad"
-            maxLength={10}
-            accessibilityLabel="Data"
-            accessibilityHint="Digite a data no formato dia, mês, ano"
-            style={[
-              styles.input,
-              {
-                backgroundColor: colors.surface,
-                borderColor: dateError ? colors.danger : colors.border,
-                borderRadius: 12,
-                paddingHorizontal: spacing.lg,
-                color: colors.text,
-                minHeight: touchSize.min,
-                fontSize: 16,
-              },
-            ]}
-          />
-          <Pressable
-            onPress={openDatePicker}
-            accessibilityRole="button"
-            accessibilityLabel="Abrir calendário"
-            accessibilityHint="Toque para abrir o calendário e selecionar uma data"
-            style={[
-              styles.calButton,
-              {
-                backgroundColor: colors.primary,
-                borderRadius: 12,
-                width: touchSize.min,
-                height: touchSize.min,
-                alignItems: 'center',
-                justifyContent: 'center',
-              },
-            ]}
-          >
-            <Ionicons name="calendar-outline" size={24} color={colors.surface} />
-          </Pressable>
-        </View>
+        <TextInput
+          value={inputValue}
+          onChangeText={handleTextChange}
+          placeholder="DD/MM/AAAA"
+          placeholderTextColor={colors.textMuted}
+          keyboardType="number-pad"
+          maxLength={10}
+          accessibilityLabel="Data"
+          accessibilityHint="Digite a data no formato dia, mês, ano"
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.surface,
+              borderColor: dateError ? colors.danger : colors.border,
+              borderRadius: 12,
+              paddingHorizontal: spacing.lg,
+              color: colors.text,
+              minHeight: touchSize.min,
+              fontSize: 16,
+            },
+          ]}
+        />
         {dateError && (
           <ThemeText variant="caption" color={colors.danger} accessibilityRole="alert">
             {dateError}
           </ThemeText>
         )}
       </View>
-
-      {showDatePicker && Platform.OS === 'ios' && (
-        <Modal transparent animationType="slide">
-          <View style={styles.modalOverlay}>
-            <View style={[styles.modalContent, { backgroundColor: colors.surface, borderRadius: 16 }]}>
-              <DateTimePicker
-                value={dateValue ? new Date(dateValue + 'T12:00:00') : new Date()}
-                mode="date"
-                display="spinner"
-                onChange={handleDatePickerChange}
-                locale="pt-BR"
-              />
-              <Pressable
-                onPress={() => setShowDatePicker(false)}
-                style={{ padding: spacing.md, alignItems: 'center' }}
-              >
-                <ThemeText variant="body" color={colors.primary}>Confirmar</ThemeText>
-              </Pressable>
-            </View>
-          </View>
-        </Modal>
-      )}
 
       <View style={[styles.switchRow, { gap: spacing.sm }]}>
         <Pressable
@@ -238,11 +139,15 @@ export function DateTimeField({
         </Pressable>
 
         {hasTime && (
-          <Pressable
-            onPress={handleTimeSelected}
-            accessibilityRole="button"
-            accessibilityLabel={`Horário: ${toDisplayTime(timeValue)}`}
-            accessibilityHint="Toque para definir o horário"
+          <TextInput
+            value={timeValue}
+            onChangeText={handleTimeChange}
+            placeholder="HH:MM"
+            placeholderTextColor={colors.textMuted}
+            keyboardType="number-pad"
+            maxLength={5}
+            accessibilityLabel="Horário"
+            accessibilityHint="Digite o horário no formato hora e minuto"
             style={[
               styles.field,
               {
@@ -252,16 +157,11 @@ export function DateTimeField({
                 paddingHorizontal: spacing.lg,
                 minHeight: touchSize.min,
                 flex: 1,
+                color: colors.text,
+                fontSize: 16,
               },
             ]}
-          >
-            <ThemeText
-              variant="body"
-              color={timeValue ? colors.text : colors.textMuted}
-            >
-              {toDisplayTime(timeValue)}
-            </ThemeText>
-          </Pressable>
+          />
         )}
       </View>
 
@@ -275,17 +175,8 @@ export function DateTimeField({
 }
 
 const styles = StyleSheet.create({
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   input: {
-    flex: 1,
     borderWidth: 1.5,
-  },
-  calButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   field: {
     justifyContent: 'center',
@@ -299,14 +190,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  modalContent: {
-    padding: 24,
-    paddingBottom: 40,
   },
 })

@@ -31,7 +31,7 @@ export function ActivityExecutionProgress({ completedCount, totalSteps, progress
           ]}
         />
       </View>
-      <ThemeText variant="caption" color="muted">{label}</ThemeText>
+      <ThemeText variant="caption" style={{ color: colors.textMuted }}>{label}</ThemeText>
     </View>
   )
 }

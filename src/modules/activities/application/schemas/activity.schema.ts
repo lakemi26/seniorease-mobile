@@ -41,6 +41,14 @@ function normalizeToDay(date: Date): Date {
   return normalized
 }
 
+function isValidTime(value: string): boolean {
+  const match = /^(\d{2}):(\d{2})$/.exec(value)
+  if (!match) return false
+  const hours = Number(match[1])
+  const minutes = Number(match[2])
+  return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59
+}
+
 export const activityFormSchema = z
   .object({
     title: z
@@ -71,6 +79,14 @@ export const activityFormSchema = z
         code: z.ZodIssueCode.custom,
         path: ['time'],
         message: 'Informe o horário.',
+      })
+    }
+
+    if (data.hasTime && data.time && !isValidTime(data.time)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['time'],
+        message: 'Informe um horário válido.',
       })
     }
 
