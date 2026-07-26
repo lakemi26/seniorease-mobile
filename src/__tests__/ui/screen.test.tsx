@@ -2,6 +2,25 @@ import { render } from '@testing-library/react-native'
 import { Text } from 'react-native'
 import { Screen } from '@/components/ui/screen'
 
+jest.mock('@/contexts/theme-context', () => ({
+  useTheme: () => ({
+    colors: {
+      background: '#F7F4EE',
+      surface: '#FAF8F5',
+      surfaceMuted: '#F0EDE8',
+      text: '#1A1A2E',
+      textMuted: '#6B7280',
+      primary: '#6C63FF',
+      primaryDark: '#5A52D5',
+      border: '#E5E7EB',
+      error: '#EF4444',
+    },
+    contrast: 'default',
+    spacing: 4,
+    interfaceMode: 'simplified',
+  }),
+}))
+
 describe('Screen', () => {
   it('renders children', async () => {
     const { getByText } = await render(

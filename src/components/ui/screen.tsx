@@ -1,8 +1,7 @@
 import type { PropsWithChildren } from 'react'
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { spacing } from '@/shared/theme/spacing'
-import { colors } from '@/shared/theme/colors'
+import { useTheme } from '@/contexts/theme-context'
 
 interface ScreenProps extends PropsWithChildren {
   scroll?: boolean
@@ -10,15 +9,17 @@ interface ScreenProps extends PropsWithChildren {
 }
 
 export function Screen({ children, scroll = true, padded = true }: ScreenProps) {
+  const { colors } = useTheme()
+
   const content = (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <View style={padded ? styles.padded : undefined}>{children}</View>
+      {padded ? <View style={styles.padded}>{children}</View> : children}
     </SafeAreaView>
   )
 
   return (
     <KeyboardAvoidingView
-      style={styles.root}
+      style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       {scroll ? (
@@ -37,10 +38,6 @@ export function Screen({ children, scroll = true, padded = true }: ScreenProps) 
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   scrollContent: {
     flexGrow: 1,
   },
@@ -49,6 +46,5 @@ const styles = StyleSheet.create({
   },
   padded: {
     flex: 1,
-    paddingHorizontal: spacing.xl,
   },
 })
