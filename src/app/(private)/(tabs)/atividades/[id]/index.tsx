@@ -2,13 +2,20 @@ import { useCallback, useState } from 'react'
 import { View, ScrollView, StyleSheet } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { useTheme } from '@/contexts/theme-context'
+import { useAuth } from '@/contexts/auth-context'
 import { ThemeView } from '@/components/theme/theme-view'
 import { ThemeText } from '@/components/theme/theme-text'
 import { AppButton } from '@/components/ui/app-button'
 import { useActivityDetails } from '@/screens/activities/hook/use-activity-details'
 import { DeleteActivityDialog } from '@/screens/activities/components/delete-activity-dialog'
+import { ReopenActivityDialog } from '@/screens/activities/components/reopen-activity-dialog'
 import { getStatusLabel, getPriorityLabel, getCategoryLabel, completedStepsCount } from '@/modules/activities/domain/activity-utils'
+import { createFirebaseActivityRepository } from '@/modules/activities/infrastructure/repositories/firebase-activity.repository'
+import { createActivityUseCases } from '@/modules/activities/application/use-cases'
 import type { Activity } from '@/modules/activities/domain/entities'
+
+const repo = createFirebaseActivityRepository()
+const useCases = createActivityUseCases(repo)
 
 function DetailsContent({ activity }: { activity: Activity }) {
   const { colors, spacing } = useTheme()
@@ -113,10 +120,14 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 export default function ActivityDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
-  const { spacing } = useTheme()
+  const { spacing, confirmCriticalActions } = useTheme()
+  const { user } = useAuth()
   const { activity, isLoading, error, remove } = useActivityDetails(id)
   const [showDelete, setShowDelete] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isStarting, setIsStarting] = useState(false)
+  const [showReopenActivity, setShowReopenActivity] = useState(false)
+  const [isReopening, setIsReopening] = useState(false)
 
   const handleEdit = useCallback(() => {
     router.push(`/atividades/${id}/editar` as any)
@@ -132,6 +143,29 @@ export default function ActivityDetailsScreen() {
       setShowDelete(false)
     }
   }, [remove, router])
+
+  const handleStartActivity = useCallback(async () => {
+    if (!id || !user?.uid || isStarting) return
+    setIsStarting(true)
+    try {
+      await useCases.startActivity(id, user.uid)
+      router.replace(`/atividades/${id}/executar` as any)
+    } catch {
+      setIsStarting(false)
+    }
+  }, [id, user, isStarting, router])
+
+  const handleReopenActivity = useCallback(async () => {
+    if (!id || !user?.uid || isReopening) return
+    setIsReopening(true)
+    try {
+      await useCases.reopenActivity(id, user.uid)
+      router.replace(`/atividades/${id}/executar` as any)
+    } catch {
+      setIsReopening(false)
+      setShowReopenActivity(false)
+    }
+  }, [id, user, isReopening, router])
 
   if (isLoading) {
     return (
@@ -169,14 +203,23 @@ export default function ActivityDetailsScreen() {
           {(activity.status === 'pending') && (
             <AppButton
               title="Iniciar atividade"
-              onPress={() => {}}
+              onPress={handleStartActivity}
               variant="primary"
+              loading={isStarting}
+              disabled={isStarting}
             />
           )}
           {activity.status === 'inProgress' && (
             <AppButton
               title="Continuar atividade"
               onPress={() => router.push(`/atividades/${id}/executar` as any)}
+              variant="primary"
+            />
+          )}
+          {activity.status === 'completed' && (
+            <AppButton
+              title="Reabrir atividade"
+              onPress={() => setShowReopenActivity(true)}
               variant="primary"
             />
           )}
@@ -198,6 +241,13 @@ export default function ActivityDetailsScreen() {
         onConfirm={handleDelete}
         onCancel={() => setShowDelete(false)}
         isDeleting={isDeleting}
+      />
+
+      <ReopenActivityDialog
+        visible={showReopenActivity}
+        onConfirm={handleReopenActivity}
+        onCancel={() => { setShowReopenActivity(false); setIsReopening(false) }}
+        isLoading={isReopening}
       />
     </ThemeView>
   )
