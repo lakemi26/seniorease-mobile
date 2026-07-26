@@ -23,7 +23,7 @@ export function DynamicPreviewCard() {
       accessibilityElementsHidden
     >
       <View style={[styles.bar, { backgroundColor: colors.primarySoft, borderRadius: radius.sm, padding: spacing.sm }]}>
-        <ThemeText variant="subtitle" color={colors.primaryDark}>
+        <ThemeText variant="subtitle" color={colors.primary}>
           Título de exemplo
         </ThemeText>
       </View>
@@ -32,7 +32,7 @@ export function DynamicPreviewCard() {
         configurações que você está escolhendo agora.
       </ThemeText>
       <View style={[styles.buttonMock, { backgroundColor: colors.primary, borderRadius: radius.sm, paddingVertical: spacing.sm, paddingHorizontal: spacing.lg }]}>
-        <ThemeText variant="body" style={{ color: colors.surface }}>
+        <ThemeText variant="body" style={{ color: colors.background }}>
           Botão de exemplo
         </ThemeText>
       </View>

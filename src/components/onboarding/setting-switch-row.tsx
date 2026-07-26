@@ -11,7 +11,7 @@ interface SettingSwitchRowProps {
 }
 
 export function SettingSwitchRow({ label, description, value, onValueChange, accessibilityHint }: SettingSwitchRowProps) {
-  const { colors, spacing } = useTheme()
+  const { colors, spacing, contrast } = useTheme()
 
   return (
     <View
@@ -29,8 +29,8 @@ export function SettingSwitchRow({ label, description, value, onValueChange, acc
         <Switch
           value={value}
           onValueChange={onValueChange}
-          trackColor={{ false: colors.border, true: colors.primarySoft }}
-          thumbColor={value ? colors.primary : colors.textMuted}
+          trackColor={{ false: colors.border, true: contrast === 'dark' ? colors.primaryDark : colors.primarySoft }}
+          thumbColor={value ? (contrast === 'dark' ? colors.text : colors.primary) : colors.textMuted}
           ios_backgroundColor={colors.border}
         />
       </View>

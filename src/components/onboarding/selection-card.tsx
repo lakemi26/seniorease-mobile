@@ -24,7 +24,7 @@ export function SelectionCard({ label, description, selected, onPress, accessibi
       style={({ pressed }) => [
         styles.card,
         {
-          backgroundColor: selected ? colors.primaryVerySoft : colors.surface,
+          backgroundColor: selected ? colors.primarySoft : colors.surface,
           borderColor: selected ? colors.primary : colors.border,
           borderWidth: selected ? 2 : 1.5,
           padding: spacing.md,
@@ -36,12 +36,12 @@ export function SelectionCard({ label, description, selected, onPress, accessibi
       ]}
     >
       <View style={[styles.row, { gap: spacing.sm }]}>
-        <ThemeText variant="body" color={selected ? colors.primaryDark : undefined} style={styles.label}>
+        <ThemeText variant="body" color={selected ? colors.primary : undefined} style={styles.label}>
           {label}
         </ThemeText>
         {selected ? (
           <View style={[styles.check, { backgroundColor: colors.primary, borderRadius: 12 }]} accessibilityElementsHidden>
-            <ThemeText variant="caption" style={{ color: colors.surface, fontSize: 12, lineHeight: 16 }}>✓</ThemeText>
+            <ThemeText variant="caption" style={{ color: colors.background, fontSize: 12, lineHeight: 16 }}>✓</ThemeText>
           </View>
         ) : null}
       </View>

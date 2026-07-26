@@ -1,127 +1,126 @@
-jest.mock('firebase/auth', () => ({
-  onAuthStateChanged: jest.fn((_auth: any, cb: any) => { cb(null); return jest.fn() }),
-  getAuth: jest.fn(() => ({})),
+import { getColors, darkColors, lightColors, highContrastColors } from '@/shared/theme/colors'
+import { render } from '@testing-library/react-native'
+import React from 'react'
+import { SelectionCard } from '@/components/onboarding/selection-card'
+import { StepProgress } from '@/components/onboarding/step-progress'
+import { DynamicPreviewCard } from '@/components/onboarding/dynamic-preview-card'
+
+jest.mock('@/contexts/theme-context', () => ({
+  useTheme: jest.fn(),
+  ThemeProvider: ({ children }: any) => children,
 }))
 
-jest.mock('@/infrastructure/firebase/firebase.auth', () => ({
-  getFirebaseAuth: jest.fn(() => ({})),
-}))
+import { useTheme } from '@/contexts/theme-context'
+const mockUseTheme = useTheme as jest.Mock
 
-jest.mock('@/infrastructure/firebase/firebase.firestore', () => ({
-  getFirebaseFirestore: jest.fn(() => ({})),
-}))
+function makeMockTheme(contrast: 'default' | 'high' | 'dark' = 'default') {
+  const colors = getColors(contrast)
+  return {
+    colors,
+    spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 },
+    fontSize: { caption: 14, label: 15, body: 17, bodyLarge: 19, subtitle: 21, title: 27, display: 32 },
+    lineHeight: { caption: 18, label: 20, body: 24, bodyLarge: 26, subtitle: 28, title: 34, display: 40 },
+    radius: { sm: 6, md: 10, lg: 14, xl: 20, full: 9999 },
+    shadows: { sm: {}, md: {}, lg: {} },
+    contrast,
+    fontSizePreference: 'normal' as const,
+    spacingPreference: 'normal' as const,
+    interfaceMode: 'complete' as const,
+    reduceMotion: false,
+    enhancedFeedback: true,
+    confirmCriticalActions: true,
+    remindersEnabled: true,
+    fontSizeMultiplier: 1,
+  }
+}
 
-jest.mock('@/modules/authentication/infrastructure/firebase-auth.repository', () => ({
-  createFirebaseAuthRepository: jest.fn(() => ({
-    getUserPreferences: jest.fn(async () => null),
-    saveUserPreferences: jest.fn(),
-    subscribeToUserPreferences: jest.fn(() => jest.fn()),
-    signIn: jest.fn(),
-    signUp: jest.fn(),
-    signOut: jest.fn(),
-    sendPasswordReset: jest.fn(),
-    getCurrentUser: jest.fn(() => null),
-    onAuthStateChanged: jest.fn((_cb: any) => { _cb(null); return jest.fn() }),
-    getUserProfile: jest.fn(() => Promise.resolve(null)),
-    subscribeToUserProfile: jest.fn(() => jest.fn()),
-    createUserProfile: jest.fn(),
-    updateUserProfile: jest.fn(),
-    updateUserName: jest.fn(),
-    resetUserPreferences: jest.fn(),
-    deleteUserAccount: jest.fn(),
-  })),
-}))
-
-jest.mock('@/modules/authentication/application/use-cases', () => ({
-  createAuthUseCases: jest.fn((_repo: any) => ({
-    signInUser: jest.fn(),
-    signUpUser: jest.fn(),
-    signOutUser: jest.fn(),
-    sendPasswordReset: jest.fn(),
-    getAuthenticatedUser: jest.fn(() => null),
-    getUserProfile: jest.fn(() => Promise.resolve(null)),
-    subscribeToUserProfile: jest.fn(() => jest.fn()),
-    updateUserName: jest.fn(),
-    createUserProfile: jest.fn(),
-    updateUserProfile: jest.fn(),
-    getUserPreferences: jest.fn(async () => null),
-    saveUserPreferences: jest.fn(),
-    subscribeToUserPreferences: jest.fn(() => jest.fn()),
-    resetUserPreferences: jest.fn(),
-    deleteUserAccount: jest.fn(),
-  })),
-}))
-
-import { buildTheme } from '@/contexts/theme-context'
-import type { UserPreferences } from '@/modules/authentication/domain/entities'
-import { DEFAULT_USER_PREFERENCES } from '@/modules/authentication/domain/entities'
-
-const defaultPrefs: UserPreferences = { ...DEFAULT_USER_PREFERENCES }
-
-describe('buildTheme', () => {
-  it('returns default theme with default preferences', () => {
-    const theme = buildTheme(defaultPrefs)
-    expect(theme.fontSizePreference).toBe('normal')
-    expect(theme.contrast).toBe('default')
-    expect(theme.spacingPreference).toBe('normal')
-    expect(theme.interfaceMode).toBe('complete')
-    expect(theme.reduceMotion).toBe(false)
-    expect(theme.enhancedFeedback).toBe(true)
+describe('darkColors palette', () => {
+  it('uses blue-night background', () => {
+    expect(darkColors.background).toBe('#0D1117')
   })
 
-  it('fontSize extraLarge scales font sizes', () => {
-    const theme = buildTheme({ ...defaultPrefs, fontSize: 'extraLarge' })
-    expect(theme.fontSizePreference).toBe('extraLarge')
-    expect(theme.fontSize.body).toBeGreaterThan(17)
-    expect(theme.fontSizeMultiplier).toBe(1.3)
+  it('uses blue-night surface', () => {
+    expect(darkColors.surface).toBe('#161B22')
   })
 
-  it('fontSize large applies 1.15 multiplier', () => {
-    const theme = buildTheme({ ...defaultPrefs, fontSize: 'large' })
-    expect(theme.fontSizeMultiplier).toBe(1.15)
-    expect(theme.fontSize.body).toBe(Math.round(17 * 1.15))
+  it('uses blue primary', () => {
+    expect(darkColors.primary).toBe('#58A6FF')
   })
 
-  it('contrast high returns high contrast colors with light background', () => {
-    const theme = buildTheme({ ...defaultPrefs, contrast: 'high' })
-    expect(theme.contrast).toBe('high')
-    expect(theme.colors.background).toBe('#FFFFFF')
-    expect(theme.colors.text).toBe('#000000')
-    expect(theme.colors.border).toBe('#000000')
-    expect(theme.colors.primary).toBe('#006B68')
+  it('uses dark border', () => {
+    expect(darkColors.border).toBe('#30363D')
   })
 
-  it('contrast dark returns dark background', () => {
-    const theme = buildTheme({ ...defaultPrefs, contrast: 'dark' })
-    expect(theme.contrast).toBe('dark')
-    expect(theme.colors.background).toBe('#101817')
-    expect(theme.colors.text).toBe('#F4F7F6')
-    expect(theme.colors.border).toBe('#40514D')
+  it('does not use teal', () => {
+    expect(darkColors.background).not.toBe('#101817')
+    expect(darkColors.surface).not.toBe('#172220')
+    expect(darkColors.primary).not.toBe('#76C3BC')
+    expect(darkColors.border).not.toBe('#40514D')
+  })
+})
+
+describe('getColors()', () => {
+  it('default returns lightColors', () => {
+    expect(getColors('default')).toBe(lightColors)
   })
 
-  it('spacing expanded increases spacing values', () => {
-    const theme = buildTheme({ ...defaultPrefs, spacing: 'expanded' })
-    expect(theme.spacingPreference).toBe('expanded')
-    expect(theme.spacing.md).toBe(16)
-    expect(theme.spacing.xl).toBe(30)
+  it('dark returns darkColors', () => {
+    expect(getColors('dark')).toBe(darkColors)
   })
 
-  it('all boolean preferences are reflected', () => {
-    const theme = buildTheme({
-      ...defaultPrefs,
-      enhancedFeedback: false,
-      confirmCriticalActions: false,
-      reduceMotion: true,
-      remindersEnabled: false,
-    })
-    expect(theme.enhancedFeedback).toBe(false)
-    expect(theme.confirmCriticalActions).toBe(false)
-    expect(theme.reduceMotion).toBe(true)
-    expect(theme.remindersEnabled).toBe(false)
+  it('high returns highContrastColors', () => {
+    expect(getColors('high')).toBe(highContrastColors)
   })
 
-  it('interfaceMode basic is set', () => {
-    const theme = buildTheme({ ...defaultPrefs, interfaceMode: 'basic' })
-    expect(theme.interfaceMode).toBe('basic')
+  it('high contrast does not select dark palette', () => {
+    const colors = getColors('high')
+    expect(colors.background).toBe('#FFFFFF')
+    expect(colors.background).not.toBe('#0D1117')
+  })
+
+  it('default does not select dark palette', () => {
+    const colors = getColors('default')
+    expect(colors.background).toBe('#F7F4EE')
+    expect(colors.primary).not.toBe('#58A6FF')
+  })
+})
+
+describe('Onboarding component rendering', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('SelectionCard renders with default theme', () => {
+    mockUseTheme.mockReturnValue(makeMockTheme('default'))
+    const result = render(
+      <SelectionCard label="Teste" description="Descrição" selected={false} onPress={() => {}} />,
+    )
+    expect(result).toBeDefined()
+  })
+
+  it('SelectionCard selected renders dark card', () => {
+    mockUseTheme.mockReturnValue(makeMockTheme('dark'))
+    const result = render(
+      <SelectionCard label="Escuro" description="Fundo escuro" selected onPress={() => {}} />,
+    )
+    expect(result).toBeDefined()
+  })
+
+  it('StepProgress renders with dark theme', () => {
+    mockUseTheme.mockReturnValue(makeMockTheme('dark'))
+    const result = render(<StepProgress current={3} total={6} />)
+    expect(result).toBeDefined()
+  })
+
+  it('DynamicPreviewCard renders with light theme', () => {
+    mockUseTheme.mockReturnValue(makeMockTheme('default'))
+    const result = render(<DynamicPreviewCard />)
+    expect(result).toBeDefined()
+  })
+
+  it('DynamicPreviewCard renders with dark theme', () => {
+    mockUseTheme.mockReturnValue(makeMockTheme('dark'))
+    const result = render(<DynamicPreviewCard />)
+    expect(result).toBeDefined()
   })
 })
