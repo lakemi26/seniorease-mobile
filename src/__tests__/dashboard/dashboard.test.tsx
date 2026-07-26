@@ -600,11 +600,11 @@ describe('DashboardScreen - Theme contrast modes', () => {
       contrast: 'dark',
       colors: {
         ...mockColors,
-        background: '#101817',
-        surface: '#172220',
-        text: '#F4F7F6',
-        border: '#40514D',
-        primary: '#76C3BC',
+        background: '#0D1117',
+        surface: '#161B22',
+        text: '#E6EDF3',
+        border: '#30363D',
+        primary: '#58A6FF',
       },
     })
     mockUseDashboard.mockReturnValue({
