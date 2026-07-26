@@ -1,5 +1,5 @@
 import type { IAuthRepository } from '../domain/repositories'
-import type { UserProfile, UserPreferences } from '../domain/entities'
+import { DEFAULT_USER_PREFERENCES, type UserProfile, type UserPreferences } from '../domain/entities'
 
 export function createAuthUseCases(repository: IAuthRepository) {
   function signInUser(email: string, password: string, rememberMe: boolean) {
@@ -10,17 +10,7 @@ export function createAuthUseCases(repository: IAuthRepository) {
     const user = await repository.signUp(email, password)
     await repository.updateFirebaseProfile(user, { displayName: name })
     await repository.createUserProfile(user.uid, { name, email })
-    await repository.saveUserPreferences(user.uid, {
-      fontSize: 'normal',
-      contrast: 'default',
-      spacing: 'normal',
-      interfaceMode: 'basic',
-      enhancedFeedback: true,
-      confirmCriticalActions: true,
-      reduceMotion: false,
-      remindersEnabled: true,
-      updatedAt: '',
-    })
+    await repository.saveUserPreferences(user.uid, DEFAULT_USER_PREFERENCES)
     return user
   }
 
@@ -54,7 +44,7 @@ export function createAuthUseCases(repository: IAuthRepository) {
       throw new Error('Use pelo menos 2 caracteres.')
     }
     if (trimmed.length > 80) {
-      throw new Error('O nome deve ter no máximo 80 caracteres.')
+      throw new Error('O nome deve ter no mï¿½ximo 80 caracteres.')
     }
     await repository.updateUserName(userId, trimmed)
     const currentUser = repository.getCurrentUser()

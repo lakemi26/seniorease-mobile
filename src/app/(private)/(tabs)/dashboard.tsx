@@ -39,7 +39,7 @@ export default function DashboardScreen() {
   }
 
   const isComplete = interfaceMode === 'complete'
-  const showSummary = isComplete && weeklySummary != null
+  const showSummary = weeklySummary != null
   const showRecent = isComplete && recentCompleted.length > 0
 
   return (

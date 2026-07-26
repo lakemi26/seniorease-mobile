@@ -1,4 +1,6 @@
-import { render, fireEvent, waitFor } from '@testing-library/react-native'
+import { render, fireEvent, waitFor, cleanup, act } from '@testing-library/react-native'
+
+type PressableElement = Parameters<typeof fireEvent.press>[0]
 
 const mockPush = jest.fn()
 const mockSignOut = jest.fn()
@@ -192,7 +194,16 @@ function mockAuth(overrides = {}) {
   })
 }
 
+async function pressAsync(element: PressableElement) {
+  await act(async () => {
+    fireEvent.press(element)
+    await Promise.resolve()
+    await Promise.resolve()
+  })
+}
+
 beforeEach(() => {
+  jest.useRealTimers()
   jest.clearAllMocks()
   mockUpdateUserName.mockReset()
   mockFn.mockReset()
@@ -217,6 +228,11 @@ beforeEach(() => {
     clearDraft: jest.fn(),
   }
   mockAuth()
+})
+
+afterEach(() => {
+  cleanup()
+  jest.useRealTimers()
 })
 
 describe('PerfilScreen', () => {
@@ -304,7 +320,7 @@ describe('PerfilScreen', () => {
       const { getByText, findByDisplayValue, findByTestId } = await render(<PerfilScreen />)
       fireEvent.press(getByText('Editar perfil'))
       fireEvent.changeText(await findByDisplayValue('Larissa Akemi'), 'Larissa Silva')
-      fireEvent.press(await findByTestId('button-salvar'))
+      await pressAsync(await findByTestId('button-salvar'))
       await waitFor(() => {
         expect(mockUpdateUserName).toHaveBeenCalledWith('uid-123', 'Larissa Silva')
       })
@@ -315,7 +331,7 @@ describe('PerfilScreen', () => {
       const { getByText, findByDisplayValue, findByTestId, findByText } = await render(<PerfilScreen />)
       fireEvent.press(getByText('Editar perfil'))
       fireEvent.changeText(await findByDisplayValue('Larissa Akemi'), 'Larissa Silva')
-      fireEvent.press(await findByTestId('button-salvar'))
+      await pressAsync(await findByTestId('button-salvar'))
       expect(await findByText('Perfil atualizado.')).toBeTruthy()
     })
 
@@ -324,7 +340,7 @@ describe('PerfilScreen', () => {
       const { getByText, findByDisplayValue, findByTestId, findByText } = await render(<PerfilScreen />)
       fireEvent.press(getByText('Editar perfil'))
       fireEvent.changeText(await findByDisplayValue('Larissa Akemi'), 'Larissa Silva')
-      fireEvent.press(await findByTestId('button-salvar'))
+      await pressAsync(await findByTestId('button-salvar'))
       expect(await findByText(/N\u00e3o foi poss\u00edvel atualizar/)).toBeTruthy()
     })
 
@@ -358,7 +374,7 @@ describe('PerfilScreen', () => {
       mockSendPasswordReset.mockResolvedValue(undefined)
       const { getByText, findByTestId } = await render(<PerfilScreen />)
       fireEvent.press(getByText('Alterar senha'))
-      fireEvent.press(await findByTestId('dialog-confirm'))
+      await pressAsync(await findByTestId('dialog-confirm'))
       await waitFor(() => {
         expect(mockSendPasswordReset).toHaveBeenCalledWith('larissa@email.com')
       })
@@ -368,7 +384,7 @@ describe('PerfilScreen', () => {
       mockSendPasswordReset.mockResolvedValue(undefined)
       const { getByText, findByTestId, findByText } = await render(<PerfilScreen />)
       fireEvent.press(getByText('Alterar senha'))
-      fireEvent.press(await findByTestId('dialog-confirm'))
+      await pressAsync(await findByTestId('dialog-confirm'))
       expect(await findByText(/instru\u00e7\u00f5es/)).toBeTruthy()
     })
 
@@ -376,7 +392,7 @@ describe('PerfilScreen', () => {
       mockSendPasswordReset.mockRejectedValue(new Error('fail'))
       const { getByText, findByTestId, findByText } = await render(<PerfilScreen />)
       fireEvent.press(getByText('Alterar senha'))
-      fireEvent.press(await findByTestId('dialog-confirm'))
+      await pressAsync(await findByTestId('dialog-confirm'))
       expect(await findByText(/N\u00e3o foi poss\u00edvel enviar/)).toBeTruthy()
     })
   })
@@ -401,7 +417,7 @@ describe('PerfilScreen', () => {
       mockSignOut.mockResolvedValue(undefined)
       const { getByText, findByTestId } = await render(<PerfilScreen />)
       fireEvent.press(getByText('Sair da conta'))
-      fireEvent.press(await findByTestId('dialog-confirm'))
+      await pressAsync(await findByTestId('dialog-confirm'))
       await waitFor(() => {
         expect(mockSignOut).toHaveBeenCalled()
       })
@@ -411,7 +427,7 @@ describe('PerfilScreen', () => {
       mockSignOut.mockRejectedValue(new Error('fail'))
       const { getByText, findByTestId, findByText } = await render(<PerfilScreen />)
       fireEvent.press(getByText('Sair da conta'))
-      fireEvent.press(await findByTestId('dialog-confirm'))
+      await pressAsync(await findByTestId('dialog-confirm'))
       expect(await findByText(/N\u00e3o foi poss\u00edvel sair/)).toBeTruthy()
     })
   })

@@ -1,6 +1,8 @@
 import React from 'react'
-import { render, fireEvent, waitFor } from '@testing-library/react-native'
+import { render, fireEvent, waitFor, cleanup, act } from '@testing-library/react-native'
 import { DEFAULT_USER_PREFERENCES, type UserPreferences } from '@/modules/authentication/domain/entities'
+
+type PressableElement = Parameters<typeof fireEvent.press>[0]
 
 let mockApplyDraft: jest.Mock
 let mockClearDraft: jest.Mock
@@ -201,12 +203,26 @@ function makePrefs(overrides?: Partial<{
   }
 }
 
+async function pressAsync(element: PressableElement) {
+  await act(async () => {
+    fireEvent.press(element)
+    await Promise.resolve()
+    await Promise.resolve()
+  })
+}
+
 beforeEach(() => {
+  jest.useRealTimers()
   jest.clearAllMocks()
   mockApplyDraft = jest.fn()
   mockClearDraft = jest.fn()
   mockSaveDraftAndClear = jest.fn().mockResolvedValue(undefined)
   mockPrefs = makePrefs()
+})
+
+afterEach(() => {
+  cleanup()
+  jest.useRealTimers()
 })
 
 describe('ConfiguracoesScreen', () => {
@@ -366,7 +382,7 @@ describe('save and discard', () => {
       effectivePreferences: { ...DEFAULT_USER_PREFERENCES, fontSize: 'large' },
     })
     const { getByTestId } = await render(<ConfiguracoesScreen />)
-    fireEvent.press(getByTestId('button-salvar-alteracoes'))
+    await pressAsync(getByTestId('button-salvar-alteracoes'))
     expect(mockSaveDraftAndClear).toHaveBeenCalled()
   })
 
@@ -378,7 +394,7 @@ describe('save and discard', () => {
       saveDraftAndClear: mockSaveDraftAndClear,
     })
     const { getByTestId, findByText } = await render(<ConfiguracoesScreen />)
-    fireEvent.press(getByTestId('button-salvar-alteracoes'))
+    await pressAsync(getByTestId('button-salvar-alteracoes'))
     expect(await findByText('Não foi possível salvar suas configurações. Verifique sua conexão e tente novamente.')).toBeTruthy()
   })
 

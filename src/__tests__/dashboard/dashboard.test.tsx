@@ -480,7 +480,7 @@ describe('DashboardScreen basic mode', () => {
     expect(getByText(/João/)).toBeTruthy()
   })
 
-  it('does not show weekly summary in basic mode', async () => {
+  it('shows weekly summary in basic mode when data is available', async () => {
     mockUseAuth.mockReturnValue({
       user: { uid: 'u1' },
       profile: { name: 'João' },
@@ -490,18 +490,18 @@ describe('DashboardScreen basic mode', () => {
       nextActivity: null,
       todayActivitiesSorted: [],
       recentCompleted: [],
-      weeklySummary: null,
+      weeklySummary: { total: 10, completed: 4, pending: 4, inProgress: 2 },
       reminders: [],
       isLoading: false,
       error: null,
       refetch: jest.fn(),
     })
-    const { queryByText } = await render(
+    const { getByText } = await render(
       <View>
         <DashboardScreen />
       </View>,
     )
-    expect(queryByText('Resumo da semana')).toBeNull()
+    expect(getByText('Resumo da semana')).toBeTruthy()
   })
 
   it('shows 3 quick actions in basic mode', async () => {

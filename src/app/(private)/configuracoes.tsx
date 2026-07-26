@@ -30,6 +30,20 @@ export default function ConfiguracoesScreen() {
   const [showSavedFeedback, setShowSavedFeedback] = useState(false)
 
   const ongoingSaveRef = useRef(false)
+  const savedFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearSavedFeedbackTimer = useCallback(() => {
+    if (savedFeedbackTimerRef.current) {
+      clearTimeout(savedFeedbackTimerRef.current)
+      savedFeedbackTimerRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      clearSavedFeedbackTimer()
+    }
+  }, [clearSavedFeedbackTimer])
 
   const isNarrow = screenWidth < 380 || fontSizeMultiplier > 1.15
 
@@ -89,16 +103,20 @@ export default function ConfiguracoesScreen() {
     ongoingSaveRef.current = true
     try {
       await saveDraftAndClear()
+      clearSavedFeedbackTimer()
       setShowSavedFeedback(true)
       AccessibilityInfo.announceForAccessibility('Configurações salvas com sucesso.')
-      setTimeout(() => setShowSavedFeedback(false), 3000)
+      savedFeedbackTimerRef.current = setTimeout(() => {
+        setShowSavedFeedback(false)
+        savedFeedbackTimerRef.current = null
+      }, 3000)
     } catch {
       setError('Não foi possível salvar suas configurações. Verifique sua conexão e tente novamente.')
     } finally {
       setSaving(false)
       ongoingSaveRef.current = false
     }
-  }, [saveDraftAndClear])
+  }, [clearSavedFeedbackTimer, saveDraftAndClear])
 
   const handleRestore = useCallback(() => {
     applyDraft(DEFAULT_USER_PREFERENCES)

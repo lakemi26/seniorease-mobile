@@ -75,7 +75,7 @@ export function useDashboard() {
     useCases
       .getWeeklySummary(uid)
       .then((summary) => update({ weeklySummary: summary }))
-      .catch(() => {})
+      .catch(() => update({ weeklySummary: { total: 0, completed: 0, pending: 0, inProgress: 0 } }))
 
     unsubs.push(
       useCases.subscribeToNextActivity(
@@ -154,7 +154,11 @@ export function useDashboard() {
           setData((prev) => ({ ...prev, weeklySummary: summary }))
         }
       })
-      .catch(() => {})
+      .catch(() => {
+        if (mountedRef.current) {
+          setData((prev) => ({ ...prev, weeklySummary: { total: 0, completed: 0, pending: 0, inProgress: 0 } }))
+        }
+      })
   }, [user?.uid])
 
   const sortTodayActivities = useCallback((activities: Activity[]) => {

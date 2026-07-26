@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { View, ScrollView, StyleSheet, BackHandler, AccessibilityInfo } from 'react-native'
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -42,6 +42,29 @@ export default function PerfilScreen() {
 
   const ongoingLogoutRef = useRef(false)
   const originalNameRef = useRef('')
+  const saveSuccessTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const passwordSuccessTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearSaveSuccessTimer = useCallback(() => {
+    if (saveSuccessTimerRef.current) {
+      clearTimeout(saveSuccessTimerRef.current)
+      saveSuccessTimerRef.current = null
+    }
+  }, [])
+
+  const clearPasswordSuccessTimer = useCallback(() => {
+    if (passwordSuccessTimerRef.current) {
+      clearTimeout(passwordSuccessTimerRef.current)
+      passwordSuccessTimerRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      clearSaveSuccessTimer()
+      clearPasswordSuccessTimer()
+    }
+  }, [clearPasswordSuccessTimer, clearSaveSuccessTimer])
 
   const displayName = useMemo(() => {
     const profileName = profile?.name?.trim()
@@ -88,9 +111,10 @@ export default function PerfilScreen() {
     originalNameRef.current = n
     reset({ name: n })
     setError(null)
+    clearSaveSuccessTimer()
     setSaveSuccess(false)
     setIsEditing(true)
-  }, [displayName, reset])
+  }, [clearSaveSuccessTimer, displayName, reset])
 
   const cancelEditing = useCallback(() => {
     if (hasNameChanged) {
@@ -116,15 +140,19 @@ export default function PerfilScreen() {
       await authUseCases.updateUserName(user.uid, data.name)
       setIsEditing(false)
       originalNameRef.current = data.name.trim()
+      clearSaveSuccessTimer()
       setSaveSuccess(true)
       AccessibilityInfo.announceForAccessibility('Perfil atualizado com sucesso.')
-      setTimeout(() => setSaveSuccess(false), 3000)
+      saveSuccessTimerRef.current = setTimeout(() => {
+        setSaveSuccess(false)
+        saveSuccessTimerRef.current = null
+      }, 3000)
     } catch {
       setError('Não foi possível atualizar seu perfil. Verifique sua conexão e tente novamente.')
     } finally {
       setSaving(false)
     }
-  }, [user])
+  }, [clearSaveSuccessTimer, user])
 
   const handlePasswordReset = useCallback(async () => {
     if (!userEmail) return
@@ -133,15 +161,19 @@ export default function PerfilScreen() {
     try {
       await sendPasswordReset(userEmail)
       setShowPasswordDialog(false)
+      clearPasswordSuccessTimer()
       setPasswordSuccess(true)
       AccessibilityInfo.announceForAccessibility('Enviamos as instruções para o seu e-mail.')
-      setTimeout(() => setPasswordSuccess(false), 5000)
+      passwordSuccessTimerRef.current = setTimeout(() => {
+        setPasswordSuccess(false)
+        passwordSuccessTimerRef.current = null
+      }, 5000)
     } catch {
       setError('Não foi possível enviar o e-mail de redefinição. Verifique sua conexão e tente novamente.')
     } finally {
       setPasswordLoading(false)
     }
-  }, [userEmail, sendPasswordReset])
+  }, [clearPasswordSuccessTimer, userEmail, sendPasswordReset])
 
   const handleLogout = useCallback(async () => {
     if (ongoingLogoutRef.current) return
