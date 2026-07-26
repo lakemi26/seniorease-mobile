@@ -63,7 +63,7 @@ export function AppButton({
   const btnVariants: Record<ButtonVariant, { container: ViewStyle; text: TextStyle }> = useMemo(() => ({
     primary: {
       container: { backgroundColor: colors.primary },
-      text: { color: colors.surface } as TextStyle,
+      text: { color: colors.background } as TextStyle,
     },
     secondary: {
       container: { backgroundColor: colors.surface },
@@ -83,7 +83,7 @@ export function AppButton({
     },
     danger: {
       container: { backgroundColor: colors.danger },
-      text: { color: colors.surface } as TextStyle,
+      text: { color: colors.background } as TextStyle,
     },
   }), [colors.primary, colors.surface, colors.text, colors.danger])
 
@@ -105,7 +105,7 @@ export function AppButton({
     >
       {loading ? (
         <ActivityIndicator
-          color={variant === 'outline' || variant === 'ghost' ? colors.primary : colors.surface}
+          color={variant === 'outline' || variant === 'ghost' ? colors.primary : colors.background}
           size="small"
         />
       ) : (
