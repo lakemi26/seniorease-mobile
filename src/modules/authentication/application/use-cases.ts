@@ -54,9 +54,17 @@ export function createAuthUseCases(repository: IAuthRepository) {
       throw new Error('Use pelo menos 2 caracteres.')
     }
     if (trimmed.length > 80) {
-      throw new Error('O nome deve ter no m√°ximo 80 caracteres.')
+      throw new Error('O nome deve ter no m·ximo 80 caracteres.')
     }
     await repository.updateUserName(userId, trimmed)
+    const currentUser = repository.getCurrentUser()
+    if (currentUser) {
+      try {
+        await repository.updateFirebaseProfile(currentUser, { displayName: trimmed })
+      } catch {
+        // Non-critical: Firestore already updated
+      }
+    }
   }
 
   async function createUserProfile(uid: string, data: { name: string; email: string }): Promise<void> {
