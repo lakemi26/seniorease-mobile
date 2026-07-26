@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { View, FlatList, Pressable, StyleSheet } from 'react-native'
+import { View, FlatList, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTheme } from '@/contexts/theme-context'
 import { ThemeView } from '@/components/theme/theme-view'
@@ -20,21 +20,21 @@ export default function ActivitiesListScreen() {
 
   const {
     filteredGroups,
-    visibleCount,
     hasMore,
     isLoading,
+    isLoadingMore,
     error,
     search,
     period,
     setSearch,
     setPeriod,
     loadMore,
+    refresh,
     clearFilters,
   } = useActivitiesList()
 
   const allFiltered = filteredGroups.flatMap((g) => g.data)
-  const visibleActivities = allFiltered.slice(0, visibleCount)
-  const isEmpty = !isLoading && !error && allFiltered.length === 0
+  const isEmpty = !isLoading && !error && allFiltered.length === 0 && !hasMore
   const hasFilters = period !== 'all' || search.trim().length > 0
 
   const handleCardPress = useCallback(
@@ -54,7 +54,7 @@ export default function ActivitiesListScreen() {
         <ThemeView style={[styles.centered, { padding: spacing.xl, gap: spacing.lg }]}>
           <ThemeText variant="title">Erro ao carregar atividades</ThemeText>
           <ThemeText variant="body" style={{ color: colors.textMuted }}>{error}</ThemeText>
-          <AppButton title="Tentar novamente" onPress={() => {}} variant="primary" />
+          <AppButton title="Tentar novamente" onPress={refresh} variant="primary" />
         </ThemeView>
       </Screen>
     )
@@ -85,7 +85,7 @@ export default function ActivitiesListScreen() {
           />
         ) : (
           <FlatList
-            data={visibleActivities}
+            data={allFiltered}
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxxl }}
             style={{ flex: 1 }}
@@ -101,9 +101,10 @@ export default function ActivitiesListScreen() {
               hasMore ? (
                 <View style={{ paddingVertical: spacing.lg, alignItems: 'center' }}>
                   <AppButton
-                    title="Carregar mais atividades"
+                    title={isLoadingMore ? 'Carregando...' : 'Carregar mais atividades'}
                     onPress={loadMore}
                     variant="outline"
+                    loading={isLoadingMore}
                   />
                 </View>
               ) : null

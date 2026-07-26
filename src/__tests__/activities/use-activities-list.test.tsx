@@ -2,9 +2,8 @@ import { renderHook, act } from '@testing-library/react-native'
 import type { Activity } from '@/modules/activities/domain/entities'
 
 const mockFn = jest.fn()
-let mockSubscribeCallback: ((data: Activity[]) => void) | null = null
 
-const mockSubscribeByUser = jest.fn()
+const mockFetchActivitiesPage = jest.fn()
 
 jest.mock('@/contexts/auth-context', () => ({
   get useAuth() { return () => mockFn() },
@@ -17,7 +16,7 @@ jest.mock('@/modules/activities/application/use-cases', () => ({
     deleteActivity: jest.fn(),
     createActivity: jest.fn(),
     updateActivity: jest.fn(),
-    get subscribeByUser() { return mockSubscribeByUser },
+    get fetchActivitiesPage() { return mockFetchActivitiesPage },
   }),
 }))
 
@@ -58,28 +57,30 @@ function mockAuth(overrides = {}) {
 describe('useActivitiesList', () => {
   beforeEach(() => {
     mockFn.mockReset()
-    mockSubscribeByUser.mockReset()
-    mockSubscribeByUser.mockImplementation((_uid: string, _filters: any, onData: (data: Activity[]) => void, _onError: (err: Error) => void) => {
-      mockSubscribeCallback = onData
-      return jest.fn()
-    })
+    mockFetchActivitiesPage.mockReset()
+    mockFetchActivitiesPage.mockResolvedValue({ data: [], nextCursor: null })
     mockAuth()
-    mockSubscribeCallback = null
   })
 
-  it('starts loading and subscribes on mount', async () => {
-    const { result } = await renderHook(() => useActivitiesList())
+  it('starts loading and fetches first page on mount', async () => {
+    mockFetchActivitiesPage.mockReturnValueOnce(new Promise(() => {}))
+    const { result, unmount } = await renderHook(() => useActivitiesList())
+
     expect(result.current.isLoading).toBe(true)
     expect(result.current.activities).toEqual([])
     expect(result.current.error).toBeNull()
-    expect(mockSubscribeByUser).toHaveBeenCalled()
+    expect(mockFetchActivitiesPage).toHaveBeenCalledWith('test-uid', {}, null, 10)
+
+    unmount()
   })
 
-  it('updates activities when subscription delivers data', async () => {
+  it('updates activities when first page loads', async () => {
+    const activities = [makeActivity('act-1'), makeActivity('act-2')]
+    mockFetchActivitiesPage.mockResolvedValueOnce({ data: activities, nextCursor: null })
+
     const { result } = await renderHook(() => useActivitiesList())
 
-    const activities = [makeActivity('act-1'), makeActivity('act-2')]
-    await act(async () => { mockSubscribeCallback!(activities) })
+    await act(async () => {})
 
     expect(result.current.isLoading).toBe(false)
     expect(result.current.activities).toHaveLength(2)
@@ -93,54 +94,50 @@ describe('useActivitiesList', () => {
   })
 
   it('filters by search query', async () => {
-    const { result } = await renderHook(() => useActivitiesList())
-
     const activities = [
       makeActivity('act-1', { title: 'Consulta médica' }),
       makeActivity('act-2', { title: 'Compras mercado' }),
     ]
-    await act(async () => { mockSubscribeCallback!(activities) })
+    mockFetchActivitiesPage.mockResolvedValueOnce({ data: activities, nextCursor: null })
+
+    const { result } = await renderHook(() => useActivitiesList())
+
+    await act(async () => {})
     await act(async () => { result.current.setSearch('consulta') })
 
     expect(result.current.filteredGroups.flatMap((g: any) => g.data)).toHaveLength(1)
   })
 
-  it('filters by period', async () => {
+  it('fetches a new page when period changes', async () => {
     const { result } = await renderHook(() => useActivitiesList())
 
-    const today = new Date()
-    const yesterday = new Date(today)
-    yesterday.setDate(yesterday.getDate() - 1)
-
-    const activities = [
-      makeActivity('act-1', { scheduledAt: today, status: 'pending' }),
-      makeActivity('act-2', { scheduledAt: yesterday, status: 'pending' }),
-    ]
-    await act(async () => { mockSubscribeCallback!(activities) })
     await act(async () => { result.current.setPeriod('today') })
+    await act(async () => {})
 
-    const allFiltered = result.current.filteredGroups.flatMap((g: any) => g.data)
-    expect(allFiltered.some((a: any) => a.id === 'act-1')).toBe(true)
+    expect(mockFetchActivitiesPage).toHaveBeenLastCalledWith('test-uid', { period: 'today' }, null, 10)
   })
 
-  it('hasMore when visible count less than total', async () => {
+  it('hasMore when the page returns a cursor', async () => {
+    mockFetchActivitiesPage.mockResolvedValueOnce({ data: [makeActivity('act-1')], nextCursor: 'cursor-1' })
+
     const { result } = await renderHook(() => useActivitiesList())
-
-    const items = Array.from({ length: 15 }, (_, i) => makeActivity(`act-${i}`))
-    await act(async () => { mockSubscribeCallback!(items) })
-
+    await act(async () => {})
     expect(result.current.hasMore).toBe(true)
-    expect(result.current.visibleCount).toBe(10)
   })
 
-  it('loadMore increases visible count', async () => {
+  it('loadMore fetches and appends the next page', async () => {
+    mockFetchActivitiesPage
+      .mockResolvedValueOnce({ data: [makeActivity('act-1')], nextCursor: 'cursor-1' })
+      .mockResolvedValueOnce({ data: [makeActivity('act-2')], nextCursor: null })
+
     const { result } = await renderHook(() => useActivitiesList())
 
-    const items = Array.from({ length: 15 }, (_, i) => makeActivity(`act-${i}`))
-    await act(async () => { mockSubscribeCallback!(items) })
+    await act(async () => {})
     await act(async () => { result.current.loadMore() })
+    await act(async () => {})
 
-    expect(result.current.visibleCount).toBe(20)
+    expect(mockFetchActivitiesPage).toHaveBeenLastCalledWith('test-uid', {}, 'cursor-1', 10)
+    expect(result.current.activities.map((a) => a.id)).toEqual(['act-1', 'act-2'])
   })
 
   it('clearFilters resets period and search', async () => {

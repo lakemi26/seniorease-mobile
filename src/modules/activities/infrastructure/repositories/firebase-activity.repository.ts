@@ -102,8 +102,10 @@ export function createFirebaseActivityRepository(): IActivityRepository {
             const endOfDay = new Date(now)
             endOfDay.setHours(23, 59, 59, 999)
             if (filters.period === 'today' && (a.scheduledAt < startOfDay || a.scheduledAt > endOfDay)) return false
-            if (filters.period === 'upcoming' && isActivityScheduledBefore(a, now)) return false
+            if (filters.period === 'upcoming' && (isActivityScheduledBefore(a, now) || a.status === 'completed' || a.status === 'cancelled')) return false
+            if (filters.period === 'inProgress' && a.status !== 'inProgress') return false
             if (filters.period === 'completed' && a.status !== 'completed') return false
+            if (filters.period === 'overdue' && (a.scheduledAt >= now || a.status === 'completed' || a.status === 'cancelled')) return false
           }
           if (filters.search) {
             const q = filters.search.toLowerCase()
@@ -118,6 +120,74 @@ export function createFirebaseActivityRepository(): IActivityRepository {
         onError?.(error)
       }
     )
+  }
+
+  async function fetchActivitiesPage(
+    uid: string,
+    filters: ActivityFilters,
+    cursor: unknown | null,
+    pageSize: number
+  ): Promise<{ data: Activity[]; nextCursor: unknown | null }> {
+    const db = getDb()
+    const ref = collection(db, 'activities')
+    const constraints: Parameters<typeof query>[1][] = [where('userId', '==', uid)]
+    const now = new Date()
+
+    let statusConstraintApplied = false
+
+    if (filters.period === 'today') {
+      const startOfDay = new Date(now)
+      startOfDay.setHours(0, 0, 0, 0)
+      const endOfDay = new Date(now)
+      endOfDay.setHours(23, 59, 59, 999)
+
+      constraints.push(where('scheduledAt', '>=', Timestamp.fromDate(startOfDay)))
+      constraints.push(where('scheduledAt', '<=', Timestamp.fromDate(endOfDay)))
+    } else if (filters.period === 'upcoming') {
+      constraints.push(where('scheduledAt', '>', Timestamp.fromDate(now)))
+    } else if (filters.period === 'overdue') {
+      constraints.push(where('scheduledAt', '<', Timestamp.fromDate(now)))
+    } else if (filters.period === 'inProgress') {
+      constraints.push(where('status', '==', 'inProgress'))
+      statusConstraintApplied = true
+    } else if (filters.period === 'completed') {
+      constraints.push(where('status', '==', 'completed'))
+      statusConstraintApplied = true
+    }
+
+    if (filters.status && filters.status !== 'all' && !statusConstraintApplied) {
+      constraints.push(where('status', '==', filters.status))
+      statusConstraintApplied = true
+    }
+
+    if (!statusConstraintApplied) {
+      constraints.push(where('status', 'in', ['pending', 'inProgress']))
+    }
+
+    if (filters.category && filters.category !== 'all') {
+      constraints.push(where('category', '==', filters.category))
+    }
+
+    constraints.push(orderBy('scheduledAt', 'asc'))
+
+    if (cursor) {
+      constraints.push(startAfter(cursor as DocumentSnapshot))
+    }
+
+    constraints.push(limit(pageSize))
+
+    const q = query(ref, ...constraints)
+    const snapshot = await getDocs(q)
+    const docs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as ActivityDocument)
+
+    let activities = mapActivityDocuments(docs)
+
+    if (filters.period === 'upcoming' || filters.period === 'overdue') {
+      activities = activities.filter((a) => a.status !== 'completed' && a.status !== 'cancelled')
+    }
+
+    const nextCursor = snapshot.docs.length === pageSize ? snapshot.docs[snapshot.docs.length - 1] : null
+    return { data: activities, nextCursor }
   }
 
   function subscribeToNextActivity(
@@ -841,6 +911,7 @@ export function createFirebaseActivityRepository(): IActivityRepository {
     completeActivity,
     reopenActivity,
     subscribeByUser,
+    fetchActivitiesPage,
     subscribeToNextActivity,
     subscribeToTodayActivities,
     subscribeToInProgressActivities,

@@ -5,7 +5,7 @@ export type Unsubscribe = () => void
 export interface ActivityFilters {
   status?: Activity['status'] | 'all'
   category?: Activity['category'] | 'all'
-  period?: 'all' | 'today' | 'upcoming' | 'completed'
+  period?: 'all' | 'today' | 'upcoming' | 'inProgress' | 'completed' | 'overdue'
   search?: string
 }
 
@@ -30,6 +30,13 @@ export interface IActivityRepository {
     onData: (activities: Activity[]) => void,
     onError?: (error: Error) => void
   ): Unsubscribe
+
+  fetchActivitiesPage(
+    uid: string,
+    filters: ActivityFilters,
+    cursor: unknown | null,
+    pageSize: number
+  ): Promise<{ data: Activity[]; nextCursor: unknown | null }>
 
   subscribeToNextActivity(uid: string, onData: (activity: Activity | null) => void, onError?: (error: Error) => void): Unsubscribe
 

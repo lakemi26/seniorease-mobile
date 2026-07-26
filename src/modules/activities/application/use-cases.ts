@@ -146,6 +146,18 @@ export function createActivityUseCases(repository: IActivityRepository) {
     return repository.subscribeByUser(uid, filters, onData, onError)
   }
 
+  function fetchActivitiesPage(
+    uid: string,
+    filters: ActivityFilters,
+    cursor: unknown | null,
+    pageSize: number
+  ): Promise<{ data: Activity[]; nextCursor: unknown | null }> {
+    if (!uid) {
+      throw new ActivityError('Usuário não identificado.')
+    }
+    return repository.fetchActivitiesPage(uid, filters, cursor, pageSize)
+  }
+
   function subscribeToNextActivity(
     uid: string,
     onData: (activity: Activity | null) => void,
@@ -377,6 +389,7 @@ export function createActivityUseCases(repository: IActivityRepository) {
     completeActivity,
     reopenActivity,
     subscribeByUser,
+    fetchActivitiesPage,
     subscribeToNextActivity,
     subscribeToTodayActivities,
     subscribeToInProgressActivities,
