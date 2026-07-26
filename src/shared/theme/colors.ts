@@ -1,5 +1,6 @@
 export interface ColorTokens {
   primary: string
+  primaryPressed: string
   primaryDark: string
   primarySoft: string
   primaryVerySoft: string
@@ -11,8 +12,11 @@ export interface ColorTokens {
   surface: string
   surfaceMuted: string
   text: string
+  textStrong: string
   textMuted: string
+  textSubtle: string
   border: string
+  borderStrong: string
   success: string
   warning: string
   danger: string
@@ -28,6 +32,7 @@ export interface ColorTokens {
 
 export const lightColors: ColorTokens = {
   primary: '#2F7F7A',
+  primaryPressed: '#215F5B',
   primaryDark: '#215F5B',
   primarySoft: '#D9ECE9',
   primaryVerySoft: '#EDF6F4',
@@ -39,8 +44,11 @@ export const lightColors: ColorTokens = {
   surface: '#FFFFFF',
   surfaceMuted: '#EFEDE7',
   text: '#202927',
+  textStrong: '#202927',
   textMuted: '#65716E',
+  textSubtle: '#65716E',
   border: '#CDD7D3',
+  borderStrong: '#9BA8A4',
   success: '#3C7A57',
   warning: '#A86F1B',
   danger: '#B85252',
@@ -56,6 +64,7 @@ export const lightColors: ColorTokens = {
 
 export const darkColors: ColorTokens = {
   primary: '#58A6FF',
+  primaryPressed: '#388BFD',
   primaryDark: '#1F6FEB',
   primarySoft: '#13233A',
   primaryVerySoft: '#182E4A',
@@ -67,8 +76,11 @@ export const darkColors: ColorTokens = {
   surface: '#161B22',
   surfaceMuted: '#1C232D',
   text: '#E6EDF3',
+  textStrong: '#F0F6FC',
   textMuted: '#B0B8C4',
+  textSubtle: '#7D8590',
   border: '#30363D',
+  borderStrong: '#484F58',
   success: '#3FB950',
   warning: '#D29922',
   danger: '#F85149',
@@ -84,6 +96,7 @@ export const darkColors: ColorTokens = {
 
 export const highContrastColors: ColorTokens = {
   primary: '#006B68',
+  primaryPressed: '#004F4D',
   primaryDark: '#004F4D',
   primarySoft: '#E8F7F5',
   primaryVerySoft: '#F2FCFA',
@@ -95,8 +108,11 @@ export const highContrastColors: ColorTokens = {
   surface: '#FFFFFF',
   surfaceMuted: '#F5F5F5',
   text: '#000000',
+  textStrong: '#000000',
   textMuted: '#1A1A1A',
+  textSubtle: '#1A1A1A',
   border: '#000000',
+  borderStrong: '#000000',
   success: '#006B2D',
   warning: '#7A4B00',
   danger: '#A00000',
