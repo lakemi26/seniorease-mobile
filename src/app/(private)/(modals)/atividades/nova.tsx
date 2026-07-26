@@ -38,7 +38,7 @@ export default function NovaAtividadeModal() {
     <ThemeView style={{ flex: 1 }}>
       <View style={[styles.header, { padding: spacing.xl, gap: spacing.md }]}>
         <ThemeText variant="display">Nova atividade</ThemeText>
-        <AppButton title="Cancelar" onPress={() => router.back()} variant="ghost" />
+        <AppButton title="Cancelar" onPress={() => router.replace('/atividades')} variant="ghost" />
       </View>
 
       <ScrollView

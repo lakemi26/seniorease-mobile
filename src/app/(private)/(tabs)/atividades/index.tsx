@@ -50,7 +50,7 @@ export default function ActivitiesListScreen() {
 
   if (error) {
     return (
-      <Screen>
+      <Screen padded={false}>
         <ThemeView style={[styles.centered, { padding: spacing.xl, gap: spacing.lg }]}>
           <ThemeText variant="title">Erro ao carregar atividades</ThemeText>
           <ThemeText variant="body" color="muted">{error}</ThemeText>
@@ -61,7 +61,7 @@ export default function ActivitiesListScreen() {
   }
 
   return (
-    <Screen>
+    <Screen scroll={false} padded={false}>
       <ThemeView style={{ flex: 1 }}>
         <View style={[styles.header, { paddingHorizontal: spacing.xl, paddingTop: spacing.lg, gap: spacing.md }]}>
           <ThemeText variant="display">Atividades</ThemeText>
@@ -88,6 +88,7 @@ export default function ActivitiesListScreen() {
             data={visibleActivities}
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxxl }}
+            style={{ flex: 1 }}
             showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (
               <ActivityCard
