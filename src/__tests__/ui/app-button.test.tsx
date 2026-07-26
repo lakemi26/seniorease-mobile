@@ -1,4 +1,15 @@
 import { render, fireEvent } from '@testing-library/react-native'
+
+jest.mock('@/contexts/theme-context', () => {
+  const { mockTheme } = jest.requireActual('@/__tests__/helpers/mock-theme')
+
+  return {
+    useTheme: () => mockTheme,
+    ThemeProvider: ({ children }: any) => children,
+    buildTheme: jest.fn(() => mockTheme),
+  }
+})
+
 import { AppButton } from '@/components/ui/app-button'
 
 describe('AppButton basic', () => {
