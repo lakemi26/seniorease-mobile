@@ -1,15 +1,25 @@
-export type NotificationStatus = 'upcoming' | 'due' | 'overdue'
+import type { Activity } from '@/modules/activities/domain/entities'
 
-export interface ReminderNotification {
+export type NotificationType = 'reminder' | 'overdue' | 'today' | 'upcoming'
+
+export interface ActivityNotification {
   id: string
   activityId: string
+  activity: Activity
+  type: NotificationType
   title: string
-  message: string
-  remindAt: Date
+  description: string
+  typeLabel: string
+  relevantAt: Date
   scheduledAt: Date
   readAt: Date | null
   dismissedAt: Date | null
-  status: NotificationStatus
+  isRead: boolean
+  isToday: boolean
+  sortRank: number
 }
 
-export const OVERDUE_WINDOW_MS = 2 * 60 * 60 * 1000
+export type NotificationFilter = 'all' | 'unread'
+
+export const UPCOMING_ACTIVITY_WINDOW_MS = 24 * 60 * 60 * 1000
+export const REMINDER_NEAR_WINDOW_MS = 30 * 60 * 1000

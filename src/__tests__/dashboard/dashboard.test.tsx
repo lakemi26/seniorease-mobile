@@ -12,6 +12,10 @@ jest.mock('@/contexts/theme-context', () => ({
   ThemeProvider: ({ children }: any) => children,
 }))
 
+jest.mock('@/contexts/notifications-context', () => ({
+  useNotifications: () => ({ unreadCount: 0 }),
+}))
+
 jest.mock('@/hooks/use-dashboard', () => ({
   useDashboard: () => mockUseDashboard(),
 }))

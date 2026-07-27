@@ -5,10 +5,13 @@ import { useAuth } from '@/contexts/auth-context'
 import { ThemeText } from '@/components/theme/theme-text'
 import { IconButton } from '@/components/ui/icon-button'
 import { Avatar } from '@/components/ui/avatar'
+import { useNotifications } from '@/contexts/notifications-context'
+import { getUnreadCountLabel } from '@/modules/notifications/domain/notification-utils'
 
 export function DashboardHeader() {
   const { colors, spacing } = useTheme()
   const { profile } = useAuth()
+  const { unreadCount } = useNotifications()
   const router = useRouter()
 
   const userName = profile?.name?.trim() ?? ''
@@ -37,8 +40,9 @@ export function DashboardHeader() {
         <IconButton
           icon="notifications-outline"
           onPress={() => nav('/notificacoes')}
-          accessibilityLabel="Notificações"
+          accessibilityLabel={`Notificações. ${getUnreadCountLabel(unreadCount)}`}
           accessibilityHint="Abre a página de notificações"
+          badge={unreadCount}
           size={22}
         />
         <IconButton

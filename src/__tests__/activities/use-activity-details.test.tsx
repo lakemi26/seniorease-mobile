@@ -1,4 +1,6 @@
 import { renderHook, waitFor, act } from '@testing-library/react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import * as Notifications from 'expo-notifications'
 import type { Activity } from '@/modules/activities/domain/entities'
 
 const mockGetActivity = jest.fn()
@@ -44,6 +46,8 @@ describe('useActivityDetails', () => {
   beforeEach(() => {
     mockGetActivity.mockReset()
     mockDeleteActivity.mockReset()
+    ;(AsyncStorage.getItem as jest.Mock).mockResolvedValue(null)
+    ;(AsyncStorage.setItem as jest.Mock).mockResolvedValue(undefined)
     mockGetActivity.mockReturnValue(undefined)
     mockDeleteActivity.mockReturnValue(undefined)
   })
@@ -98,6 +102,9 @@ describe('useActivityDetails', () => {
   it('remove returns true on success', async () => {
     mockGetActivity.mockResolvedValue(makeActivity('act-1'))
     mockDeleteActivity.mockResolvedValue(undefined)
+    ;(AsyncStorage.getItem as jest.Mock).mockResolvedValue(JSON.stringify({
+      'act-1': { identifier: 'native-1', remindAt: 'x', scheduledAt: 'y', title: 'z' },
+    }))
 
     const { result } = await renderHook(() => useActivityDetails('act-1'))
 
@@ -112,6 +119,7 @@ describe('useActivityDetails', () => {
 
     expect(removed).toBe(true)
     expect(mockDeleteActivity).toHaveBeenCalledWith('act-1')
+    expect(Notifications.cancelScheduledNotificationAsync).toHaveBeenCalledWith('native-1')
   })
 
   it('remove returns false on failure', async () => {

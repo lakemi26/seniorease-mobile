@@ -14,13 +14,32 @@ import { DateTimeField } from '@/screens/activities/components/date-time-field'
 import { ActivityStepsEditor } from '@/screens/activities/components/activity-steps-editor'
 import { ReminderSelector } from '@/screens/activities/components/reminder-selector'
 import { PastDateDialog } from '@/screens/activities/components/past-date-dialog'
+import { LocalNotificationPermissionDialog } from '@/screens/activities/components/local-notification-permission-dialog'
 
 export default function NovaAtividadeModal() {
   const router = useRouter()
   const { spacing } = useTheme()
 
   const form = useActivityForm()
-  const { control, errors, isSaving, saveError, handleSubmit, save, setValue, watchedHasTime, showPastDateDialog, confirmPastDateAndSave, dismissPastDateDialog } = form
+  const {
+    control,
+    errors,
+    isSaving,
+    saveError,
+    notificationMessage,
+    handleSubmit,
+    save,
+    setValue,
+    watchedHasTime,
+    showPastDateDialog,
+    confirmPastDateAndSave,
+    dismissPastDateDialog,
+    handleReminderOptionChange,
+    showNotificationPermissionDialog,
+    requestNotificationPermission,
+    dismissNotificationPermissionDialog,
+    isRequestingNotificationPermission,
+  } = form
 
   const watchedFormData = useWatch({ control })
 
@@ -115,7 +134,10 @@ export default function NovaAtividadeModal() {
           render={({ field: { onChange, value }, fieldState: { error } }) => (
             <ReminderSelector
               value={value}
-              onChange={onChange}
+              onChange={(option) => {
+                onChange(option)
+                void handleReminderOptionChange(option)
+              }}
               hasTime={watchedHasTime ?? false}
               error={error?.message}
             />
@@ -125,6 +147,12 @@ export default function NovaAtividadeModal() {
         {saveError && (
           <ThemeText variant="error" accessibilityRole="alert">
             {saveError}
+          </ThemeText>
+        )}
+
+        {notificationMessage && (
+          <ThemeText variant="caption" accessibilityRole="alert">
+            {notificationMessage}
           </ThemeText>
         )}
 
@@ -141,6 +169,12 @@ export default function NovaAtividadeModal() {
         visible={showPastDateDialog}
         onConfirm={handleSubmit((data) => confirmPastDateAndSave(data))}
         onCancel={dismissPastDateDialog}
+      />
+      <LocalNotificationPermissionDialog
+        visible={showNotificationPermissionDialog}
+        onAllow={requestNotificationPermission}
+        onDismiss={dismissNotificationPermissionDialog}
+        isRequesting={isRequestingNotificationPermission}
       />
     </ThemeView>
   )

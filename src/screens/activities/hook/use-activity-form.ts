@@ -4,6 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { activityFormSchema, type ActivityFormData } from '@/modules/activities/application/schemas/activity.schema'
 import { getActivityUseCases } from '@/infrastructure/composition/activity-service'
 import { useAuth } from '@/contexts/auth-context'
+import { usePreferences } from '@/contexts/preferences-context'
+import { localNotificationService } from '@/infrastructure/notifications/local-notification-service'
 import type { Activity, CreateActivityInput } from '@/modules/activities/domain/entities'
 
 
@@ -79,10 +81,14 @@ function computeRemindAt(
 
 export function useActivityForm(existingActivity?: Activity) {
   const { user } = useAuth()
+  const { preferences } = usePreferences()
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [notificationMessage, setNotificationMessage] = useState<string | null>(null)
   const [pastDateConfirm, setPastDateConfirm] = useState(false)
   const [showPastDateDialog, setShowPastDateDialog] = useState(false)
+  const [showNotificationPermissionDialog, setShowNotificationPermissionDialog] = useState(false)
+  const [isRequestingNotificationPermission, setIsRequestingNotificationPermission] = useState(false)
 
   const isEditing = !!existingActivity
 
@@ -123,6 +129,54 @@ export function useActivityForm(existingActivity?: Activity) {
   const watchedTime = watch('time')
   const watchedHasTime = watch('hasTime')
   const watchedReminderOption = watch('reminderOption')
+
+  const syncLocalNotification = useCallback(async (activity: Activity) => {
+    try {
+      await localNotificationService.syncActivityReminder(activity, preferences.remindersEnabled)
+    } catch {
+      setNotificationMessage('Atividade salva, mas não foi possível agendar o lembrete local neste dispositivo.')
+    }
+  }, [preferences.remindersEnabled])
+
+  const handleReminderOptionChange = useCallback(async (option: string) => {
+    setValue('reminderOption', option as ActivityFormData['reminderOption'])
+    setNotificationMessage(null)
+
+    if (option === 'none') return
+
+    if (!preferences.remindersEnabled) {
+      setNotificationMessage('Os lembretes estão desativados nas preferências. Ative-os para receber notificações do sistema.')
+      return
+    }
+
+    const permissionState = await localNotificationService.getPermissionState()
+    if (permissionState === 'undetermined') {
+      setShowNotificationPermissionDialog(true)
+      return
+    }
+    if (permissionState === 'denied') {
+      setNotificationMessage('As notificações estão bloqueadas. Abra as configurações do sistema para permitir lembretes do SeniorEase.')
+    }
+  }, [preferences.remindersEnabled, setValue])
+
+  const requestNotificationPermission = useCallback(async () => {
+    setIsRequestingNotificationPermission(true)
+    try {
+      const permissionState = await localNotificationService.requestPermission()
+      setShowNotificationPermissionDialog(false)
+      if (permissionState === 'granted') {
+        setNotificationMessage(null)
+      } else {
+        setNotificationMessage('As notificações foram negadas. Você pode permitir lembretes nas configurações do sistema quando quiser.')
+      }
+    } finally {
+      setIsRequestingNotificationPermission(false)
+    }
+  }, [])
+
+  const dismissNotificationPermissionDialog = useCallback(() => {
+    setShowNotificationPermissionDialog(false)
+  }, [])
 
   const checkPastDate = useCallback(
     (data: ActivityFormData): boolean => {
@@ -193,6 +247,7 @@ export function useActivityForm(existingActivity?: Activity) {
           }
 
           const updated = await useCases.updateActivity(existingActivity.id, input)
+          await syncLocalNotification(updated)
           return updated
         }
 
@@ -218,6 +273,7 @@ export function useActivityForm(existingActivity?: Activity) {
         }
 
         const created = await useCases.createActivity(input)
+        await syncLocalNotification(created)
         return created
       } catch (err: any) {
         const msg = isEditing
@@ -229,7 +285,7 @@ export function useActivityForm(existingActivity?: Activity) {
         setIsSaving(false)
       }
     },
-    [user, isEditing, existingActivity, pastDateConfirm, checkPastDate],
+    [user, isEditing, existingActivity, pastDateConfirm, checkPastDate, syncLocalNotification],
   )
 
   const confirmPastDateAndSave = useCallback(
@@ -251,6 +307,7 @@ export function useActivityForm(existingActivity?: Activity) {
     errors,
     isSaving,
     saveError,
+    notificationMessage,
     handleSubmit,
     save,
     watchedDate,
@@ -264,5 +321,10 @@ export function useActivityForm(existingActivity?: Activity) {
     showPastDateDialog,
     confirmPastDateAndSave,
     dismissPastDateDialog,
+    handleReminderOptionChange,
+    showNotificationPermissionDialog,
+    requestNotificationPermission,
+    dismissNotificationPermissionDialog,
+    isRequestingNotificationPermission,
   }
 }

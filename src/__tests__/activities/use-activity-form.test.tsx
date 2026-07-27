@@ -1,13 +1,20 @@
 import { renderHook, act } from '@testing-library/react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import * as Notifications from 'expo-notifications'
 import type { Activity } from '@/modules/activities/domain/entities'
 
 const mockFn = jest.fn()
+const mockUsePreferences = jest.fn()
 const mockCreateActivity = jest.fn()
 const mockUpdateActivity = jest.fn()
 
 jest.mock('@/contexts/auth-context', () => ({
   get useAuth() { return () => mockFn() },
   AuthProvider: ({ children }: any) => children,
+}))
+
+jest.mock('@/contexts/preferences-context', () => ({
+  get usePreferences() { return () => mockUsePreferences() },
 }))
 
 jest.mock('@/modules/activities/application/use-cases', () => ({
@@ -32,7 +39,7 @@ jest.mock('react-native-safe-area-context', () => ({
 
 import { useActivityForm } from '@/screens/activities/hook/use-activity-form'
 
-function makeActivity(id: string): Activity {
+function makeActivity(id: string, overrides: Partial<Activity> = {}): Activity {
   return {
     id,
     userId: 'user-1',
@@ -49,6 +56,7 @@ function makeActivity(id: string): Activity {
     completedAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
+    ...overrides,
   }
 }
 
@@ -59,12 +67,26 @@ function mockAuth(overrides = {}) {
   })
 }
 
+function mockPreferences(overrides = {}) {
+  mockUsePreferences.mockReturnValue({
+    preferences: { remindersEnabled: true, ...overrides },
+  })
+}
+
 describe('useActivityForm', () => {
   beforeEach(() => {
+    jest.clearAllMocks()
     mockFn.mockReset()
+    mockUsePreferences.mockReset()
     mockCreateActivity.mockReset()
     mockUpdateActivity.mockReset()
+    ;(AsyncStorage.getItem as jest.Mock).mockResolvedValue(null)
+    ;(AsyncStorage.setItem as jest.Mock).mockResolvedValue(undefined)
+    ;(Notifications.getPermissionsAsync as jest.Mock).mockResolvedValue({ granted: true, status: 'granted' })
+    ;(Notifications.requestPermissionsAsync as jest.Mock).mockResolvedValue({ granted: true, status: 'granted' })
+    ;(Notifications.scheduleNotificationAsync as jest.Mock).mockResolvedValue('native-1')
     mockAuth()
+    mockPreferences()
   })
 
   it('returns form control and default values', async () => {
@@ -158,6 +180,62 @@ describe('useActivityForm', () => {
 
     await act(async () => { await result.current.save(data) })
     expect(mockUpdateActivity).toHaveBeenCalledWith('act-1', expect.anything())
+  })
+
+  it('schedules local notification after creating an activity with reminder', async () => {
+    mockCreateActivity.mockResolvedValue(makeActivity('new-1', {
+      hasTime: true,
+      scheduledAt: new Date(Date.now() + 86400000),
+      reminder: { enabled: true, remindAt: new Date(Date.now() + 3600000), readAt: null, dismissedAt: null },
+    }))
+    const { result } = await renderHook(() => useActivityForm())
+
+    await act(async () => {
+      await result.current.save({
+        title: 'Nova atividade',
+        description: '',
+        category: 'health' as const,
+        date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        hasTime: true,
+        time: '14:00',
+        priority: 'medium' as const,
+        steps: [],
+        reminderOption: 'atTime' as const,
+        reminderDate: '',
+        reminderTime: '',
+        confirmPastDate: false,
+      })
+    })
+
+    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalled()
+  })
+
+  it('shows contextual permission dialog when a reminder is activated with undetermined permission', async () => {
+    ;(Notifications.getPermissionsAsync as jest.Mock).mockResolvedValue({ granted: false, status: 'undetermined' })
+    const { result } = await renderHook(() => useActivityForm())
+
+    await act(async () => { await result.current.handleReminderOptionChange('atTime') })
+
+    expect(result.current.showNotificationPermissionDialog).toBe(true)
+  })
+
+  it('requests notification permission from the dialog', async () => {
+    const { result } = await renderHook(() => useActivityForm())
+
+    await act(async () => { await result.current.requestNotificationPermission() })
+
+    expect(Notifications.requestPermissionsAsync).toHaveBeenCalled()
+    expect(result.current.showNotificationPermissionDialog).toBe(false)
+  })
+
+  it('does not request permission when remindersEnabled is false', async () => {
+    mockPreferences({ remindersEnabled: false })
+    const { result } = await renderHook(() => useActivityForm())
+
+    await act(async () => { await result.current.handleReminderOptionChange('atTime') })
+
+    expect(Notifications.getPermissionsAsync).not.toHaveBeenCalled()
+    expect(result.current.notificationMessage).toContain('desativados')
   })
 
   it('shows past date dialog when date is in the past', async () => {

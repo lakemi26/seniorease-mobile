@@ -6,6 +6,7 @@ import type { UserProfile } from '@/modules/authentication/domain/entities'
 import { translateAuthError, translateRecoveryError, translateRegistrationError } from '@/modules/authentication/domain/auth-errors'
 import { preloadActivitiesList } from '@/modules/activities/application/activities-list-cache'
 import { deleteSecureUserProfile, readSecureUserProfile, writeSecureUserProfile } from '@/shared/security/secure-profile-cache'
+import { localNotificationService } from '@/infrastructure/notifications/local-notification-service'
 
 interface AuthContextValue {
   user: User | null
@@ -123,6 +124,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const uid = user?.uid
     try {
       await authUseCases.signOutUser()
+      await localNotificationService.cancelAllActivityReminders().catch(() => {})
       if (uid) {
         await deleteSecureUserProfile(uid)
       }

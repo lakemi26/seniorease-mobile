@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Platform } from 'react-native'
 import { getActivityUseCases } from '@/infrastructure/composition/activity-service'
 import { useAuth } from '@/contexts/auth-context'
+import { localNotificationService } from '@/infrastructure/notifications/local-notification-service'
 import type { Activity } from '@/modules/activities/domain/entities'
 
 const useCases = getActivityUseCases()
@@ -131,6 +132,7 @@ export function useActivityExecution(id: string | undefined) {
       if (isMountedRef.current) {
         setActivity(updated)
       }
+      await localNotificationService.cancelActivityReminder(id)
       return true
     } catch (err: any) {
       if (isMountedRef.current) {
@@ -206,6 +208,7 @@ export function useActivityExecution(id: string | undefined) {
       if (isMountedRef.current) {
         setActivity(updated)
       }
+      await localNotificationService.cancelActivityReminder(id).catch(() => {})
       return true
     } catch (err: any) {
       if (isMountedRef.current) {

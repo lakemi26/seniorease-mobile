@@ -1,4 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import * as Notifications from 'expo-notifications'
 import type { Activity } from '@/modules/activities/domain/entities'
 
 const mockFn = jest.fn()
@@ -65,6 +67,8 @@ describe('useActivityExecution', () => {
     jest.clearAllMocks()
     mockAuth()
     mockGetActivity.mockResolvedValue(makeActivity())
+    ;(AsyncStorage.getItem as jest.Mock).mockResolvedValue(null)
+    ;(AsyncStorage.setItem as jest.Mock).mockResolvedValue(undefined)
     mockStartActivity.mockImplementation((_id: string, _uid: string) =>
       Promise.resolve(makeActivity({ status: 'inProgress', startedAt: new Date() }))
     )
@@ -252,6 +256,9 @@ describe('useActivityExecution', () => {
       const steps = [makeStep('s1', 1)]
       mockGetActivity.mockResolvedValue(makeActivity({ status: 'inProgress', startedAt: new Date(), steps }))
       mockCompleteActivity.mockResolvedValue(makeActivity({ status: 'completed', completedAt: new Date(), steps: [{ ...steps[0], completed: true, completedAt: new Date() }] }))
+      ;(AsyncStorage.getItem as jest.Mock).mockResolvedValue(JSON.stringify({
+        'act-1': { identifier: 'native-1', remindAt: 'x', scheduledAt: 'y', title: 'z' },
+      }))
       const { result } = await renderHook(() => useActivityExecution('act-1'))
       await waitFor(() => { expect(result.current.state.mode).toBe('step') })
       let ok = false
@@ -259,6 +266,7 @@ describe('useActivityExecution', () => {
       expect(ok).toBe(true)
       expect(result.current.state.mode).toBe('completion')
       expect(mockCompleteActivity).toHaveBeenCalledWith('act-1', 'user-1')
+      expect(Notifications.cancelScheduledNotificationAsync).toHaveBeenCalledWith('native-1')
     })
   })
 

@@ -15,6 +15,7 @@ import { DateTimeField } from '@/screens/activities/components/date-time-field'
 import { ActivityStepsEditor } from '@/screens/activities/components/activity-steps-editor'
 import { ReminderSelector } from '@/screens/activities/components/reminder-selector'
 import { PastDateDialog } from '@/screens/activities/components/past-date-dialog'
+import { LocalNotificationPermissionDialog } from '@/screens/activities/components/local-notification-permission-dialog'
 
 export default function EditarAtividadeModal() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -29,6 +30,7 @@ export default function EditarAtividadeModal() {
     errors,
     isSaving,
     saveError,
+    notificationMessage,
     handleSubmit,
     save,
     setValue,
@@ -36,6 +38,11 @@ export default function EditarAtividadeModal() {
     showPastDateDialog,
     confirmPastDateAndSave,
     dismissPastDateDialog,
+    handleReminderOptionChange,
+    showNotificationPermissionDialog,
+    requestNotificationPermission,
+    dismissNotificationPermissionDialog,
+    isRequestingNotificationPermission,
     reset,
   } = form
 
@@ -180,7 +187,10 @@ export default function EditarAtividadeModal() {
           render={({ field: { onChange, value }, fieldState: { error } }) => (
             <ReminderSelector
               value={value}
-              onChange={onChange}
+              onChange={(option) => {
+                onChange(option)
+                void handleReminderOptionChange(option)
+              }}
               hasTime={watchedHasTime ?? false}
               error={error?.message}
             />
@@ -190,6 +200,12 @@ export default function EditarAtividadeModal() {
       {saveError && (
         <ThemeText variant="error" accessibilityRole="alert">
           {saveError}
+        </ThemeText>
+      )}
+
+      {notificationMessage && (
+        <ThemeText variant="caption" accessibilityRole="alert">
+          {notificationMessage}
         </ThemeText>
       )}
 
@@ -206,6 +222,12 @@ export default function EditarAtividadeModal() {
         visible={showPastDateDialog}
         onConfirm={handleSubmit((data) => confirmPastDateAndSave(data))}
         onCancel={dismissPastDateDialog}
+      />
+      <LocalNotificationPermissionDialog
+        visible={showNotificationPermissionDialog}
+        onAllow={requestNotificationPermission}
+        onDismiss={dismissNotificationPermissionDialog}
+        isRequesting={isRequestingNotificationPermission}
       />
     </ThemeView>
   )

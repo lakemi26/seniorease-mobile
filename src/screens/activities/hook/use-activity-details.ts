@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getActivityUseCases } from '@/infrastructure/composition/activity-service'
+import { localNotificationService } from '@/infrastructure/notifications/local-notification-service'
 import type { Activity } from '@/modules/activities/domain/entities'
 
 const useCases = getActivityUseCases()
@@ -41,6 +42,7 @@ export function useActivityDetails(id: string | undefined) {
     if (!id) return false
     try {
       await useCases.deleteActivity(id)
+      await localNotificationService.cancelActivityReminder(id).catch(() => {})
       return true
     } catch {
       return false
