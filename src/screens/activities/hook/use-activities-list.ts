@@ -1,14 +1,18 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo, useDeferredValue } from 'react'
 import { useAuth } from '@/contexts/auth-context'
-import { createFirebaseActivityRepository } from '@/modules/activities/infrastructure/repositories/firebase-activity.repository'
-import { createActivityUseCases } from '@/modules/activities/application/use-cases'
+import { getActivityUseCases } from '@/infrastructure/composition/activity-service'
+import { readActivitiesListCache, writeActivitiesListCache } from '@/modules/activities/application/activities-list-cache'
 import type { Activity } from '@/modules/activities/domain/entities'
 import type { ActivityFilters } from '@/modules/activities/domain/repositories'
 
 const PAGE_SIZE = 10
 
-const repo = createFirebaseActivityRepository()
-const useCases = createActivityUseCases(repo)
+const useCases = getActivityUseCases()
+
+function buildActivityFilters(period: PeriodFilter): ActivityFilters {
+  if (period === 'all') return {}
+  return { period }
+}
 
 export type PeriodFilter = 'all' | 'today' | 'upcoming' | 'inProgress' | 'completed' | 'overdue'
 
@@ -31,13 +35,14 @@ export function useActivitiesList() {
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
+  const deferredSearch = useDeferredValue(search)
   const [period, setPeriod] = useState<PeriodFilter>('all')
   const [hasMore, setHasMore] = useState(false)
 
   const cursorRef = useRef<unknown | null>(null)
   const requestRef = useRef(0)
 
-  const loadPage = useCallback(async (cursor: unknown | null = null) => {
+  const loadPage = useCallback(async (cursor: unknown | null = null, keepCurrent = false) => {
     if (!uid) {
       setActivities([])
       setHasMore(false)
@@ -49,17 +54,14 @@ export function useActivitiesList() {
     const requestId = ++requestRef.current
     const isFirstPage = cursor === null
 
-    if (isFirstPage) {
+    if (isFirstPage && !keepCurrent) {
       setIsLoading(true)
-    } else {
+    } else if (!isFirstPage) {
       setIsLoadingMore(true)
     }
     setError(null)
 
-    const filters: ActivityFilters = {}
-    if (period !== 'all') {
-      filters.period = period
-    }
+    const filters = buildActivityFilters(period)
 
     try {
       const page = await useCases.fetchActivitiesPage(uid, filters, cursor, PAGE_SIZE)
@@ -67,10 +69,16 @@ export function useActivitiesList() {
 
       cursorRef.current = page.nextCursor
       setHasMore(Boolean(page.nextCursor))
-      setActivities((current) => (isFirstPage ? page.data : [...current, ...page.data]))
+      setActivities((current) => {
+        const nextActivities = isFirstPage ? page.data : [...current, ...page.data]
+        writeActivitiesListCache(uid, filters, nextActivities, page.nextCursor)
+        return nextActivities
+      })
     } catch (err) {
       if (requestId !== requestRef.current) return
-      setError(err instanceof Error ? err.message : 'Erro ao carregar atividades.')
+      if (!keepCurrent) {
+        setError(err instanceof Error ? err.message : 'Erro ao carregar atividades.')
+      }
     } finally {
       if (requestId === requestRef.current) {
         setIsLoading(false)
@@ -81,7 +89,19 @@ export function useActivitiesList() {
 
   useEffect(() => {
     cursorRef.current = null
-    void loadPage(null)
+    let hasCached = false
+    if (uid) {
+      const filters = buildActivityFilters(period)
+      const cached = readActivitiesListCache(uid, filters)
+      if (cached) {
+        hasCached = true
+        setActivities(cached.activities)
+        setHasMore(Boolean(cached.nextCursor))
+        cursorRef.current = cached.nextCursor
+        setIsLoading(false)
+      }
+    }
+    void loadPage(null, hasCached)
     return () => {
       requestRef.current += 1
     }
@@ -106,8 +126,8 @@ export function useActivitiesList() {
   const filteredGroups = useMemo(() => {
     let filtered = activities
 
-    if (search.trim()) {
-      const q = search.trim().toLowerCase()
+    if (deferredSearch.trim()) {
+      const q = deferredSearch.trim().toLowerCase()
       filtered = filtered.filter(
         (a) =>
           a.title.toLowerCase().includes(q) ||
@@ -146,7 +166,7 @@ export function useActivitiesList() {
     if (completed.length > 0 && period === 'completed') groups.push({ title: 'Concluídas', data: completed })
 
     return groups
-  }, [activities, search, period])
+  }, [activities, deferredSearch, period])
 
   return {
     activities,

@@ -8,8 +8,7 @@ import { useTheme } from '@/contexts/theme-context'
 import { useAuth } from '@/contexts/auth-context'
 import { usePreferences } from '@/contexts/preferences-context'
 import { profileSchema, type ProfileFormData } from '@/modules/authentication/application/schemas/profile.schema'
-import { createFirebaseAuthRepository } from '@/modules/authentication/infrastructure/firebase-auth.repository'
-import { createAuthUseCases } from '@/modules/authentication/application/use-cases'
+import { getAuthUseCases } from '@/infrastructure/composition/auth-service'
 import { ThemeText } from '@/components/theme/theme-text'
 import { ThemeView } from '@/components/theme/theme-view'
 import { AppButton } from '@/components/ui/app-button'
@@ -23,7 +22,7 @@ import { PreferencesSummary } from '@/screens/profile/preferences-summary'
 import { ConfirmationDialog } from '@/screens/profile/confirmation-dialog'
 
 export default function PerfilScreen() {
-  const authUseCases = useMemo(() => createAuthUseCases(createFirebaseAuthRepository()), [])
+  const authUseCases = useMemo(() => getAuthUseCases(), [])
   const { colors, spacing, contrast } = useTheme()
   const { profile, user, isLoading, signOut, sendPasswordReset, refreshProfile } = useAuth()
   const { effectivePreferences } = usePreferences()

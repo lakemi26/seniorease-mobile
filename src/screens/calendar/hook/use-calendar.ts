@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/contexts/auth-context'
-import { createActivityUseCases } from '@/modules/activities/application/use-cases'
+import { getActivityUseCases } from '@/infrastructure/composition/activity-service'
 import type { Activity } from '@/modules/activities/domain/entities'
-import { createFirebaseActivityRepository } from '@/modules/activities/infrastructure/repositories/firebase-activity.repository'
 import {
   formatDateFull,
   formatMonthYear,
@@ -13,8 +12,7 @@ import {
   startOfWeek,
 } from '@/shared/utils/date'
 
-const repo = createFirebaseActivityRepository()
-const useCases = createActivityUseCases(repo)
+const useCases = getActivityUseCases()
 
 export interface CalendarDay {
   date: Date

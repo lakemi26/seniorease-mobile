@@ -1,10 +1,11 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef, type PropsWithChildren } from 'react'
-import { onAuthStateChanged, type User } from 'firebase/auth'
-import { getFirebaseAuth } from '@/infrastructure/firebase/firebase.auth'
-import { createFirebaseAuthRepository } from '@/modules/authentication/infrastructure/firebase-auth.repository'
-import { createAuthUseCases } from '@/modules/authentication/application/use-cases'
+import type { User } from 'firebase/auth'
+import { getActivityUseCases } from '@/infrastructure/composition/activity-service'
+import { getAuthUseCases } from '@/infrastructure/composition/auth-service'
 import type { UserProfile } from '@/modules/authentication/domain/entities'
-import { translateAuthError, translateRecoveryError, translateRegistrationError } from '@/infrastructure/firebase/firebase.errors'
+import { translateAuthError, translateRecoveryError, translateRegistrationError } from '@/modules/authentication/domain/auth-errors'
+import { preloadActivitiesList } from '@/modules/activities/application/activities-list-cache'
+import { deleteSecureUserProfile, readSecureUserProfile, writeSecureUserProfile } from '@/shared/security/secure-profile-cache'
 
 interface AuthContextValue {
   user: User | null
@@ -21,8 +22,7 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-const repository = createFirebaseAuthRepository()
-const authUseCases = createAuthUseCases(repository)
+const authUseCases = getAuthUseCases()
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<User | null>(null)
@@ -34,14 +34,20 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const clearError = useCallback(() => setAuthError(null), [])
 
   useEffect(() => {
-    const auth = getFirebaseAuth()
-    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsub = authUseCases.subscribeToAuthState(async (firebaseUser) => {
       setUser(firebaseUser)
 
       if (firebaseUser) {
         try {
+          const cachedProfile = await readSecureUserProfile(firebaseUser.uid)
+          if (cachedProfile) {
+            setProfile(cachedProfile)
+          }
+
           const userProfile = await authUseCases.getUserProfile(firebaseUser.uid)
           setProfile(userProfile)
+          await writeSecureUserProfile(firebaseUser.uid, userProfile)
+          void preloadActivitiesList(firebaseUser.uid, getActivityUseCases())
         } catch {
           setProfile(null)
         }
@@ -75,7 +81,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
     unsubscribeRef.current = authUseCases.subscribeToUserProfile(
       user.uid,
-      (updatedProfile) => setProfile(updatedProfile),
+      (updatedProfile) => {
+        setProfile(updatedProfile)
+        void writeSecureUserProfile(user.uid, updatedProfile)
+      },
       () => {},
     )
 
@@ -111,15 +120,19 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const signOut = useCallback(async () => {
     setAuthError(null)
+    const uid = user?.uid
     try {
       await authUseCases.signOutUser()
+      if (uid) {
+        await deleteSecureUserProfile(uid)
+      }
       setProfile(null)
     } catch (error) {
       const message = translateAuthError(error)
       setAuthError(message)
       throw new Error(message)
     }
-  }, [])
+  }, [user?.uid])
 
   const sendPasswordReset = useCallback(async (email: string) => {
     setAuthError(null)

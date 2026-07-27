@@ -26,6 +26,10 @@ export function createAuthUseCases(repository: IAuthRepository) {
     return repository.getCurrentUser()
   }
 
+  function subscribeToAuthState(callback: Parameters<IAuthRepository['onAuthStateChanged']>[0]): () => void {
+    return repository.onAuthStateChanged(callback)
+  }
+
   async function getUserProfile(uid: string): Promise<UserProfile | null> {
     return repository.getUserProfile(uid)
   }
@@ -95,6 +99,7 @@ export function createAuthUseCases(repository: IAuthRepository) {
     signOutUser,
     sendPasswordReset,
     getAuthenticatedUser,
+    subscribeToAuthState,
     getUserProfile,
     subscribeToUserProfile,
     updateUserName,

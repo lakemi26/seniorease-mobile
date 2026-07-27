@@ -1,7 +1,6 @@
-import { createContext, useContext, useEffect, useState, useCallback, useRef, type PropsWithChildren } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, type PropsWithChildren } from 'react'
 import { useAuth } from './auth-context'
-import { createAuthUseCases } from '@/modules/authentication/application/use-cases'
-import { createFirebaseAuthRepository } from '@/modules/authentication/infrastructure/firebase-auth.repository'
+import { getAuthUseCases } from '@/infrastructure/composition/auth-service'
 import { DEFAULT_USER_PREFERENCES, type UserPreferences } from '@/modules/authentication/domain/entities'
 
 interface PreferencesContextValue {
@@ -23,8 +22,7 @@ export function PreferencesProvider({ children }: PropsWithChildren) {
   const [draftPreferences, setDraftPreferences] = useState<UserPreferences | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const repository = createFirebaseAuthRepository()
-  const authUseCases = createAuthUseCases(repository)
+  const authUseCases = getAuthUseCases()
 
   const effectivePreferences = draftPreferences ?? preferences
   const isPreviewing = draftPreferences !== null

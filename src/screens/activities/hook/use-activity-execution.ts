@@ -1,12 +1,10 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Platform } from 'react-native'
-import { createFirebaseActivityRepository } from '@/modules/activities/infrastructure/repositories/firebase-activity.repository'
-import { createActivityUseCases } from '@/modules/activities/application/use-cases'
+import { getActivityUseCases } from '@/infrastructure/composition/activity-service'
 import { useAuth } from '@/contexts/auth-context'
 import type { Activity } from '@/modules/activities/domain/entities'
 
-const repo = createFirebaseActivityRepository()
-const useCases = createActivityUseCases(repo)
+const useCases = getActivityUseCases()
 
 export type ExecutionMode = 'loading' | 'error' | 'introduction' | 'step' | 'completion' | 'no-steps'
 

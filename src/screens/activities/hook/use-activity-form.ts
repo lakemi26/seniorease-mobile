@@ -2,14 +2,12 @@ import { useCallback, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { activityFormSchema, type ActivityFormData } from '@/modules/activities/application/schemas/activity.schema'
-import { createFirebaseActivityRepository } from '@/modules/activities/infrastructure/repositories/firebase-activity.repository'
-import { createActivityUseCases } from '@/modules/activities/application/use-cases'
+import { getActivityUseCases } from '@/infrastructure/composition/activity-service'
 import { useAuth } from '@/contexts/auth-context'
 import type { Activity, CreateActivityInput } from '@/modules/activities/domain/entities'
 
 
-const repo = createFirebaseActivityRepository()
-const useCases = createActivityUseCases(repo)
+const useCases = getActivityUseCases()
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`

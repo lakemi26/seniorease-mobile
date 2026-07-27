@@ -1,10 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { createFirebaseActivityRepository } from '@/modules/activities/infrastructure/repositories/firebase-activity.repository'
-import { createActivityUseCases } from '@/modules/activities/application/use-cases'
+import { getActivityUseCases } from '@/infrastructure/composition/activity-service'
 import type { Activity } from '@/modules/activities/domain/entities'
 
-const repo = createFirebaseActivityRepository()
-const useCases = createActivityUseCases(repo)
+const useCases = getActivityUseCases()
 
 export function useActivityDetails(id: string | undefined) {
   const [activity, setActivity] = useState<Activity | null>(null)

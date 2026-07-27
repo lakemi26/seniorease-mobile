@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/contexts/auth-context'
-import { createFirebaseActivityRepository } from '@/modules/activities/infrastructure/repositories/firebase-activity.repository'
-import { createActivityUseCases } from '@/modules/activities/application/use-cases'
+import { getActivityUseCases } from '@/infrastructure/composition/activity-service'
 import type { Activity, WeeklySummary } from '@/modules/activities/domain/entities'
 import { startOfDay, endOfDay } from '@/shared/utils/date'
 
@@ -28,7 +27,7 @@ export function useDashboard() {
   const [error, setError] = useState<string | null>(null)
 
   const unsubRef = useRef<(() => void)[]>([])
-  const useCasesRef = useRef(createActivityUseCases(createFirebaseActivityRepository()))
+  const useCasesRef = useRef(getActivityUseCases())
   const mountedRef = useRef(true)
 
   const cleanup = useCallback(() => {

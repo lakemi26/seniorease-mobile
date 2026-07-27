@@ -12,13 +12,11 @@ import { DynamicPreviewCard } from '@/components/onboarding/dynamic-preview-card
 import { PreferencesSummary } from '@/components/onboarding/preferences-summary'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { ONBOARDING_STEPS } from '@/modules/onboarding/domain/steps'
-import { createOnboardingUseCases } from '@/modules/onboarding/application/use-cases'
-import { createFirebaseOnboardingRepository } from '@/modules/onboarding/infrastructure/firebase-onboarding.repository'
+import { getOnboardingUseCases } from '@/infrastructure/composition/onboarding-service'
 
 const TOTAL_STEPS = ONBOARDING_STEPS.length
 
-const onboardingRepo = createFirebaseOnboardingRepository()
-const onboardingUseCases = createOnboardingUseCases(onboardingRepo)
+const onboardingUseCases = getOnboardingUseCases()
 
 export default function PrimeiroAcessoScreen() {
   const router = useRouter()

@@ -10,12 +10,10 @@ import { useActivityDetails } from '@/screens/activities/hook/use-activity-detai
 import { DeleteActivityDialog } from '@/screens/activities/components/delete-activity-dialog'
 import { ReopenActivityDialog } from '@/screens/activities/components/reopen-activity-dialog'
 import { getStatusLabel, getPriorityLabel, getCategoryLabel, completedStepsCount } from '@/modules/activities/domain/activity-utils'
-import { createFirebaseActivityRepository } from '@/modules/activities/infrastructure/repositories/firebase-activity.repository'
-import { createActivityUseCases } from '@/modules/activities/application/use-cases'
+import { getActivityUseCases } from '@/infrastructure/composition/activity-service'
 import type { Activity } from '@/modules/activities/domain/entities'
 
-const repo = createFirebaseActivityRepository()
-const useCases = createActivityUseCases(repo)
+const useCases = getActivityUseCases()
 
 function DetailsContent({ activity }: { activity: Activity }) {
   const { colors, spacing } = useTheme()
