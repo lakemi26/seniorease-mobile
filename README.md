@@ -1,56 +1,113 @@
-# Welcome to your Expo app 👋
+# SeniorEase
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Plataforma Mobile criada para facilitar a organização de atividades acadêmicas, profissionais e pessoais de pessoas idosas. O objetivo é oferecer uma experiência digital simples, acessível, previsível e segura, promovendo autonomia, confiança e inclusão digital.
 
-## Get started
+## Firebase
 
-1. Install dependencies
+O SeniorEase usa Firebase (Firestore Database + Authentication) como backend.
 
-   ```bash
-   npm install
-   ```
+### 1. Criar o projeto
 
-2. Start the app
+1. Acesse https://console.firebase.google.com e clique em **Criar projeto**
+2. Siga o assistente (pode desabilitar o Google Analytics se preferir)
 
-   ```bash
-   npx expo start
-   ```
+### 2. Ativar Firestore Database
 
-In the output, you'll find options to open the app in a
+1. No console do Firebase, vá em **Firestore Database > Criar banco de dados**
+2. Escolha **Modo de teste** (as regras de segurança serão atualizadas depois)
+3. Selecione a região mais próxima (ex: `southamerica-east1`)
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### 3. Registrar o app Web
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+1. No console, clique no ícone **Web** (`</>`) para adicionar um app
+2. Dê um nome (ex: "seniorease-web") e registre
+3. Copie os valores de configuração exibidos
 
-## Get a fresh project
+### 4. Configurar variáveis de ambiente
 
-When you're ready, run:
+Copie o arquivo de exemplo e preencha com os valores do seu projeto:
 
 ```bash
-npm run reset-project
+cp .env.example .env
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+```env
 
-### Other setup steps
+EXPO_PUBLIC_FIREBASE_API_KEY=seu-valor
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=seu-valor
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=seu-valor
+EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=seu-valor
+EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=seu-valor
+EXPO_PUBLIC_FIREBASE_APP_ID=seu-valor
+EXPO_PUBLIC_USE_FIREBASE_EMULATOR=false
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+### 5. Regras do Firestore
 
-## Learn more
+As regras de segurança estão em `firestore.rules`. Para publicá-las:
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npx firebase-tools deploy --only firestore:rules
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### 6. Índices compostos
 
-## Join the community
+O arquivo `firestore.indexes.json` contém os índices necessários para as consultas do dashboard e da listagem de atividades. Para publicá-los:
 
-Join our community of developers creating universal apps.
+```bash
+npx firebase-tools init firestore     # apenas na primeira vez (responda "não" para sobrescrever firestore.rules)
+npx firebase-tools deploy --only firestore:indexes
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Os índices levam alguns minutos para ficarem ativos (status verde no console).
+
+### 7. Autenticação
+
+Para ativar login por email/senha:
+
+1. No console, vá em **Authentication > Sign-in method**
+2. Ative o provedor **Email/Senha**
+
+## Instalação
+
+```bash
+pnpm install
+```
+
+## Execução
+
+```bash
+# Iniciar o Metro Bundler
+pnpm start
+
+# Abrir no Android
+pnpm android
+
+# Abrir no iOS
+pnpm ios
+
+# Abrir no navegador
+pnpm web
+```
+
+No terminal do Expo, também é possível escolher a plataforma usando os atalhos exibidos pelo Metro Bundler.
+
+## Exportação
+
+```bash
+npx expo export
+```
+
+## Testes
+
+```bash
+pnpm test              # Executa a suíte uma vez
+pnpm test -- --watch   # Executa em modo watch
+```
+
+## Validação
+
+```bash
+pnpm lint                 # ESLint via Expo
+pnpm exec tsc --noEmit    # Verificação de tipos
+```
