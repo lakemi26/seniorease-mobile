@@ -122,6 +122,16 @@ describe('useActivityExecution', () => {
     await waitFor(() => { expect(result.current.state.mode).toBe('completion') })
   })
 
+  it('shows ready-to-complete mode when all steps are complete but activity is not completed', async () => {
+    mockGetActivity.mockResolvedValue(makeActivity({
+      status: 'inProgress',
+      startedAt: new Date(),
+      steps: [makeStep('s1', 1, true), makeStep('s2', 2, true)],
+    }))
+    const { result } = await renderHook(() => useActivityExecution('act-1'))
+    await waitFor(() => { expect(result.current.state.mode).toBe('readyToComplete') })
+  })
+
   it('shows no-steps mode when activity has no steps', async () => {
     mockGetActivity.mockResolvedValue(makeActivity({ status: 'inProgress', startedAt: new Date(), steps: [] }))
     const { result } = await renderHook(() => useActivityExecution('act-1'))
@@ -167,7 +177,7 @@ describe('useActivityExecution', () => {
       expect(mockCompleteStep).toHaveBeenCalledWith('act-1', 's1', 'user-1')
     })
 
-    it('completes last step and shows completion mode', async () => {
+    it('completes last step and becomes ready to complete activity', async () => {
       const steps = [makeStep('s1', 1, true), makeStep('s2', 2)]
       mockGetActivity.mockResolvedValue(makeActivity({ status: 'inProgress', startedAt: new Date(), steps }))
       mockCompleteStep.mockResolvedValue(makeActivity({
@@ -180,6 +190,7 @@ describe('useActivityExecution', () => {
       await act(async () => { ok = await result.current.completeCurrentStep() })
       expect(ok).toBe(true)
       expect(result.current.state.currentStep).toBeNull()
+      expect(result.current.state.mode).toBe('readyToComplete')
     })
 
     it('completes step sequentially for 3 steps (s1→s2→s3)', async () => {
@@ -210,6 +221,7 @@ describe('useActivityExecution', () => {
       }))
       await act(async () => { await result.current.completeCurrentStep() })
       expect(result.current.state.currentStep).toBeNull()
+      expect(result.current.state.mode).toBe('readyToComplete')
     })
 
     it('handles steps in wrong order correctly', async () => {
@@ -267,6 +279,20 @@ describe('useActivityExecution', () => {
       expect(result.current.state.mode).toBe('completion')
       expect(mockCompleteActivity).toHaveBeenCalledWith('act-1', 'user-1')
       expect(Notifications.cancelScheduledNotificationAsync).toHaveBeenCalledWith('native-1')
+    })
+
+    it('starts pending activity before completing it', async () => {
+      mockGetActivity.mockResolvedValue(makeActivity({ status: 'pending', steps: [] }))
+      mockStartActivity.mockResolvedValue(makeActivity({ status: 'inProgress', startedAt: new Date(), steps: [] }))
+      mockCompleteActivity.mockResolvedValue(makeActivity({ status: 'completed', completedAt: new Date(), steps: [] }))
+      const { result } = await renderHook(() => useActivityExecution('act-1'))
+      await waitFor(() => { expect(result.current.state.mode).toBe('no-steps') })
+      let ok = false
+      await act(async () => { ok = await result.current.completeActivity() })
+      expect(ok).toBe(true)
+      expect(mockStartActivity).toHaveBeenCalledWith('act-1', 'user-1')
+      expect(mockCompleteActivity).toHaveBeenCalledWith('act-1', 'user-1')
+      expect(result.current.state.mode).toBe('completion')
     })
   })
 

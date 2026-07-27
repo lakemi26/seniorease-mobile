@@ -7,7 +7,7 @@ import type { Activity } from '@/modules/activities/domain/entities'
 
 const useCases = getActivityUseCases()
 
-export type ExecutionMode = 'loading' | 'error' | 'introduction' | 'step' | 'completion' | 'no-steps'
+export type ExecutionMode = 'loading' | 'error' | 'introduction' | 'step' | 'readyToComplete' | 'completion' | 'no-steps'
 
 export interface ExecutionState {
   mode: ExecutionMode
@@ -113,7 +113,7 @@ export function useActivityExecution(id: string | undefined) {
     if (!activity) return 'error'
     if (activity.status === 'completed') return 'completion'
     if (!hasSteps) return 'no-steps'
-    if (allStepsComplete) return 'completion'
+    if (allStepsComplete) return 'readyToComplete'
     if (activity.status === 'pending') return 'introduction'
     return 'step'
   })()
@@ -204,6 +204,12 @@ export function useActivityExecution(id: string | undefined) {
     setIsProcessing(true)
     setError(null)
     try {
+      if (activity?.status === 'pending') {
+        const started = await useCases.startActivity(id, userId)
+        if (isMountedRef.current) {
+          setActivity(started)
+        }
+      }
       const updated = await useCases.completeActivity(id, userId)
       if (isMountedRef.current) {
         setActivity(updated)
@@ -220,7 +226,7 @@ export function useActivityExecution(id: string | undefined) {
         setIsProcessing(false)
       }
     }
-  }, [id, userId, isProcessing])
+  }, [activity?.status, id, userId, isProcessing])
 
   const reopenActivity = useCallback(async (): Promise<boolean> => {
     if (!id || !userId || isProcessing) return false

@@ -137,6 +137,47 @@ export default function ActivityExecutionScreen() {
     )
   }
 
+  if (mode === 'readyToComplete') {
+    return (
+      <ThemeView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ padding: spacing.xl, gap: spacing.xl }}>
+          <View style={{ gap: spacing.md }}>
+            <ThemeText variant="display">{activity.title}</ThemeText>
+            <ThemeText variant="title" style={{ color: colors.text }}>
+              Todas as etapas foram concluídas.
+            </ThemeText>
+            <ThemeText variant="body" style={{ color: colors.textMuted }}>
+              Conclua a atividade para finalizar e enviar para o histórico.
+            </ThemeText>
+          </View>
+
+          <AppButton
+            title="Concluir atividade"
+            onPress={handleCompleteActivity}
+            variant="primary"
+            loading={isProcessing}
+            disabled={isProcessing}
+          />
+
+          {isComplete && (
+            <ActivityStepsSummary
+              steps={sortedSteps}
+              onReopenStep={handleReopenStepRequest}
+              canReopen
+            />
+          )}
+        </ScrollView>
+
+        <ReopenStepDialog
+          visible={showReopenStepDialog}
+          onConfirm={handleReopenStepConfirm}
+          onCancel={() => { setShowReopenStepDialog(false); setReopeningStepId(null) }}
+          isLoading={isProcessing}
+        />
+      </ThemeView>
+    )
+  }
+
   if (mode === 'completion') {
     return (
       <ThemeView style={{ flex: 1 }}>
