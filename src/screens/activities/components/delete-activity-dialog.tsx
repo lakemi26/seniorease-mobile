@@ -71,6 +71,6 @@ const styles = StyleSheet.create({
     maxWidth: 400,
   },
   actions: {
-    flexDirection: 'row',
+    flexDirection: 'column',
   },
 })
